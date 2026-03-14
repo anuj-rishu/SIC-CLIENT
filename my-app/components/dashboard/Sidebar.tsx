@@ -13,7 +13,8 @@ import {
   ChevronRight,
   CalendarDays,
   ListTodo,
-  Globe
+  Globe,
+  FileText
 } from 'lucide-react';
 import { authService } from '@/services';
 
@@ -23,6 +24,7 @@ const menuItems = [
   { name: 'Members', icon: Users, path: '/dashboard/members' },
   { name: 'Interviews', icon: CalendarDays, path: '/dashboard/interviews' },
   { name: 'Tasks', icon: ListTodo, path: '/dashboard/tasks' },
+  { name: 'MOM control', icon: FileText, path: '/dashboard/mom-control' },
   { name: 'Website Control', icon: Globe, path: '/dashboard/website-control' },
 ];
 

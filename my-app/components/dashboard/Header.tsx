@@ -31,6 +31,9 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     if (pathname === '/dashboard/interviews') {
       return { title: 'Interview Management', desc: 'Manage interviews' };
     }
+    if (pathname === '/dashboard/mom-control') {
+      return { title: 'MOM Control', desc: 'Create and manage meeting minutes' };
+    }
     if (pathname === '/dashboard/tasks') {
       const role = profile?.domain?.role?.toUpperCase();
       const isExec = role === "FOUNDER" || role === "PRESIDENT" || role === "VICE PRESIDENT" || role === "VICEPRESIDENT";
