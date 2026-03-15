@@ -442,7 +442,7 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-6 text-center">
               {emailStep === 1 ? (
-                <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none focus:border-primary text-white text-center font-bold" placeholder="new@sic.ai" />
+                <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none focus:border-primary text-white text-center font-bold" placeholder="user@email.com" />
               ) : (
                 <input value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} maxLength={6} className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 text-center text-4xl font-black tracking-[0.5em] outline-none focus:border-primary text-primary" placeholder="000000" />
               )}

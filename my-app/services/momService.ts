@@ -6,4 +6,5 @@ export const momService = {
   getMoMById: (id: string) => apiClient.get(`/mom/${id}`),
   updateMoM: (id: string, data: any) => apiClient.put(`/mom/${id}`, data),
   deleteMoM: (id: string) => apiClient.delete(`/mom/${id}`),
+  downloadMoMPDF: (id: string) => apiClient.get(`/mom/${id}/pdf`, { responseType: 'blob' }),
 };

@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { interviewService } from "@/services/interviewService";
 import { adminService } from "@/services/adminService";
-import CustomDatePicker from "@/components/dashboard/CustomDatePicker";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
 
@@ -692,38 +691,46 @@ export default function InterviewsPage() {
 
             <form onSubmit={isEditing ? handleUpdateSchedule : handleCreateSchedule} className="space-y-8">
               <div className="grid grid-cols-2 gap-6">
-                <CustomDatePicker
-                  label="Cycle Start Date"
-                  value={scheduleData.startDate}
-                  onChange={(date) => setScheduleData({ ...scheduleData, startDate: date })}
-                  minDate={new Date()}
-                />
-                <CustomDatePicker
-                  label="Cycle End Date"
-                  value={scheduleData.endDate}
-                  onChange={(date) => setScheduleData({ ...scheduleData, endDate: date })}
-                  minDate={scheduleData.startDate ? new Date(scheduleData.startDate) : new Date()}
-                />
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Cycle Start Date</label>
+                  <input 
+                    required
+                    value={scheduleData.startDate}
+                    onChange={(e) => setScheduleData({ ...scheduleData, startDate: e.target.value })}
+                    placeholder="dd/mm/yyyy"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Cycle End Date</label>
+                  <input 
+                    required
+                    value={scheduleData.endDate}
+                    onChange={(e) => setScheduleData({ ...scheduleData, endDate: e.target.value })}
+                    placeholder="dd/mm/yyyy"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Daily Start Time</label>
                   <input 
-                    type="time"
                     required
                     value={scheduleData.dailyStartTime}
                     onChange={(e) => setScheduleData({...scheduleData, dailyStartTime: e.target.value})}
+                    placeholder="hh/mm"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Daily End Time</label>
                   <input 
-                    type="time"
                     required
                     value={scheduleData.dailyEndTime}
                     onChange={(e) => setScheduleData({...scheduleData, dailyEndTime: e.target.value})}
+                    placeholder="hh/mm"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
                   />
                 </div>

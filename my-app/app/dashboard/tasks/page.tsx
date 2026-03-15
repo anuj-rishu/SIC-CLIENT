@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 import { taskService } from "@/services/taskService";
 import { authService } from "@/services/authService";
-import CustomDatePicker from "@/components/dashboard/CustomDatePicker";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
 
@@ -58,6 +57,9 @@ export default function TasksPage() {
     assignedTo: []
   });
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [submissionTaskId, setSubmissionTaskId] = useState<string | null>(null);
+  const [submissionDescription, setSubmissionDescription] = useState("");
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -247,12 +249,24 @@ export default function TasksPage() {
   };
 
   const handleMarkDone = async (taskId: string) => {
+    setSubmissionTaskId(taskId);
+    setSubmissionDescription("");
+    setShowSubmissionModal(true);
+  };
+
+  const submitTask = async () => {
+    if (!submissionTaskId) return;
+    setActionLoading(true);
     try {
-      await taskService.markTaskDone(taskId);
+      await taskService.markTaskDone(submissionTaskId, { submissionDescription });
+      toast.success("Task submitted for review!");
+      setShowSubmissionModal(false);
       fetchMyTasks();
       fetchStats();
     } catch (err: any) {
-      toast.error(err.response?.data?.msg || "Failed to mark as done");
+      toast.error(err.response?.data?.msg || "Failed to submit task");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -483,6 +497,13 @@ export default function TasksPage() {
                            </span>
                         </div>
                         <p className="text-[11px] md:text-sm text-muted-foreground/40 line-clamp-1 group-hover:line-clamp-none transition-all duration-500">{task.description}</p>
+                        
+                        {task.submissionDescription && (
+                          <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                            <p className="text-[8px] md:text-[10px] text-primary/60 font-black uppercase tracking-widest mb-1">Submission Note</p>
+                            <p className="text-[10px] md:text-xs text-muted-foreground/60 italic">"{task.submissionDescription}"</p>
+                          </div>
+                        )}
                      </div>
                   </div>
 
@@ -629,21 +650,60 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Assign Task Modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[1.5rem] md:rounded-[2rem] w-full max-w-xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-               <button onClick={() => setShowAssignModal(false)} className="absolute top-6 right-6 p-2 z-[110] text-muted-foreground/40 hover:text-white transition-all">
+      {/* Submission Modal */}
+      {showSubmissionModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2rem] w-full max-w-sm md:max-w-md h-full md:h-auto flex flex-col relative shadow-2xl overflow-hidden">
+               <button onClick={() => setShowSubmissionModal(false)} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 z-[110] text-muted-foreground/40 hover:text-white transition-all">
                  <X className="w-5 h-5" />
                </button>
 
-               <div className="p-6 md:p-8 pb-0">
-                  <h2 className="text-lg md:text-xl font-bold text-white tracking-tight uppercase">{editingTaskId ? 'Update Task' : 'New Assignment'}</h2>
-                  <p className="text-[10px] md:text-xs text-muted-foreground/60 mt-1 uppercase font-bold tracking-widest">Squad: <span className="text-primary/80">{profile?.domain?.name}</span></p>
+               <div className="p-6 md:p-8 flex-1 flex flex-col justify-center">
+                  <h2 className="text-lg md:text-xl font-bold text-white tracking-tight uppercase">Finish Task</h2>
+                  <p className="text-[9px] md:text-[10px] text-muted-foreground/60 mt-1 uppercase font-bold tracking-widest leading-relaxed">Provide details regarding your progress</p>
+                  
+                  <div className="mt-4 md:mt-6 space-y-4">
+                    <div className="space-y-1.5">
+                       <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Submission Note</label>
+                       <textarea 
+                         required
+                         value={submissionDescription}
+                         onChange={(e) => setSubmissionDescription(e.target.value)}
+                         placeholder="Describe what you completed..."
+                         rows={4}
+                         className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 px-4 text-white text-xs md:text-sm outline-none focus:border-primary/50 transition-all resize-none"
+                       />
+                    </div>
+
+                    <button 
+                      onClick={submitTask}
+                      disabled={actionLoading}
+                      className="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Submit for Review
+                    </button>
+                  </div>
+               </div>
+            </div>
+        </div>
+      )}
+
+      {/* Assign Task Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2rem] w-full max-w-xl h-full md:h-auto flex flex-col md:max-h-[90vh] relative shadow-2xl overflow-hidden">
+               <button onClick={() => setShowAssignModal(false)} className="absolute top-4 right-4 md:top-6 md:right-6 p-2 z-[110] text-muted-foreground/40 hover:text-white transition-all border md:border-none border-white/5 rounded-lg bg-white/5 md:bg-transparent">
+                 <X className="w-4 h-4 md:w-5 md:h-5" />
+               </button>
+
+               <div className="p-5 md:p-8 pb-3 md:pb-0 border-b md:border-none border-white/5">
+                  <h2 className="text-base md:text-xl font-bold text-white tracking-tight uppercase">{editingTaskId ? 'Patch' : 'Assign'} Task</h2>
+                  <p className="text-[8px] md:text-[10px] text-muted-foreground/60 mt-0.5 md:mt-1 uppercase font-bold tracking-widest">Squad: <span className="text-primary/80">{profile?.domain?.name}</span></p>
                </div>
 
-               <div className="p-6 md:p-8 pt-4 md:pt-6 overflow-y-auto no-scrollbar flex-1">
-                 <form onSubmit={handleAssignTask} className="space-y-4 md:space-y-5">
+               <div className="p-4 md:p-8 pt-4 md:pt-6 overflow-y-auto no-scrollbar flex-1">
+                  <form onSubmit={handleAssignTask} className="space-y-6 md:space-y-5">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                     <div className="space-y-1.5">
                        <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Objective Title</label>
@@ -703,12 +763,16 @@ export default function TasksPage() {
                  </div>
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-                    <CustomDatePicker 
-                      label="Deadline"
-                      value={taskData.deadline}
-                      onChange={(date) => setTaskData({...taskData, deadline: date})}
-                      minDate={new Date()}
-                    />
+                     <div className="space-y-1.5">
+                        <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Deadline</label>
+                        <input 
+                          required
+                          value={taskData.deadline}
+                          onChange={(e) => setTaskData({...taskData, deadline: e.target.value})}
+                          placeholder="dd/mm/yyyy"
+                          className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 px-4 text-white text-xs md:text-sm outline-none focus:border-primary/50 transition-all"
+                        />
+                     </div>
                     <div className="space-y-1.5">
                        <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Priority</label>
                        <div className="grid grid-cols-3 gap-2">
@@ -733,10 +797,10 @@ export default function TasksPage() {
                  <button 
                    type="submit" 
                    disabled={actionLoading}
-                   className="w-full py-3.5 md:py-4 bg-primary text-white rounded-xl font-bold text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] disabled:opacity-50 mt-2"
+                   className="w-full py-4 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] disabled:opacity-50 md:mt-2"
                  >
                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                   {editingTaskId ? 'Commit' : 'Assign'}
+                   {editingTaskId ? 'Patch Objective' : 'Commit Assignment'}
                  </button>
                </form>
                <div className="h-6 md:h-0"></div>

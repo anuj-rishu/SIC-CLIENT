@@ -16,7 +16,7 @@ export const taskService = {
     if (search) url += `&search=${search}`;
     return apiClient.get(url);
   },
-  markTaskDone: (taskId: string) => apiClient.put(`/task/${taskId}/mark-done`),
+  markTaskDone: (taskId: string, data?: { submissionDescription: string }) => apiClient.put(`/task/${taskId}/mark-done`, data),
   approveTask: (taskId: string) => apiClient.put(`/task/${taskId}/approve`),
   rejectTask: (taskId: string) => apiClient.put(`/task/${taskId}/reject`),
   updateTask: (taskId: string, data: any) => apiClient.put(`/task/${taskId}`, data),
