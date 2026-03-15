@@ -160,7 +160,7 @@ export default function WebsiteControlPage() {
                     value={newAmount}
                     onChange={(e) => setNewAmount(e.target.value)}
                     placeholder="Enter new payment amount..."
-                    className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-9 md:pl-10 pr-4 md:pr-6 text-sm md:text-base text-white font-bold outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-muted-foreground/20 disabled:opacity-50"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-3 md:py-4 pl-9 md:pl-10 pr-4 md:pr-6 text-base text-white font-bold outline-none focus:border-primary/50 focus:bg-white/10 transition-all placeholder:text-muted-foreground/20 disabled:opacity-50"
                     required
                     disabled={error?.includes("permission") || error?.includes("Access Denied") || isSaving}
                   />
