@@ -23,6 +23,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const profileFetched = useRef(false);
 
   const refreshProfile = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? (require('cookies-next').getCookie('token')) : null;
+    if (!token) return;
+
     try {
       const res = await apiClient.get('/auth/profile');
       setProfile(res.data);

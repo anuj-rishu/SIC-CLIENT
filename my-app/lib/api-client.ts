@@ -45,12 +45,16 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401) {
       deleteCookie('token');
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
         window.location.href = '/';
       }
     }
+
+    if (error.response?.status === 429) {
+      // Just pass through the rate limit error so DataContext can show the message
+      return Promise.reject(error);
+    }
     
-    // Silence duplicate request errors to avoid toast spam
     if (error.isDuplicate) {
       return new Promise(() => {}); // Return a "never-resolving" promise to halt the chain
     }
