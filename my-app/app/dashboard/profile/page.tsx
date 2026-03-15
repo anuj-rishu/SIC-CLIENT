@@ -27,9 +27,11 @@ import { authService } from "@/services";
 import { startRegistration } from "@simplewebauthn/browser";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
+import { useData } from "@/app/context/DataContext";
 
 
 export default function ProfilePage() {
+  const { profile: contextProfile, refreshProfile } = useData();
   const [profile, setProfile] = useState<any>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -64,25 +66,21 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await authService.getProfile();
-      const data = res.data;
-      setProfile(data);
-      setName(data.name || "");
-      setEmail(data.email || "");
-      setBio(data.bio || "");
-      setGithub(data.githubProfile || "");
-      setLinkedin(data.linkedinProfile || "");
-      setPhotoPreview(data.profilePhoto || null);
-    } catch (err) {
-      console.error("Failed to fetch profile", err);
-    } finally {
+    if (contextProfile) {
+      setProfile(contextProfile);
+      setName(contextProfile.name || "");
+      setEmail(contextProfile.email || "");
+      setBio(contextProfile.bio || "");
+      setGithub(contextProfile.githubProfile || "");
+      setLinkedin(contextProfile.linkedinProfile || "");
+      setPhotoPreview(contextProfile.profilePhoto || null);
       setLoading(false);
     }
+  }, [contextProfile]);
+
+  const fetchProfile = async () => {
+    // This now just refreshes the context
+    await refreshProfile();
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {

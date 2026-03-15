@@ -1,25 +1,11 @@
-"use client";
-
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Search, Bell, Menu, User, ShieldCheck } from 'lucide-react';
-import { authService } from '@/services';
 import { usePathname } from 'next/navigation';
+import { useData } from '../../app/context/DataContext';
 
 export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
-  const [profile, setProfile] = useState<any>(null);
+  const { profile } = useData();
   const pathname = usePathname();
-
-  useEffect(() => {
-    const fetchHeaderProfile = async () => {
-      try {
-        const res = await authService.getProfile();
-        setProfile(res.data);
-      } catch (err) {
-        console.error('Header profile fetch failed', err);
-      }
-    };
-    fetchHeaderProfile();
-  }, []);
 
   const getPageInfo = () => {
     if (pathname === '/dashboard/members') {

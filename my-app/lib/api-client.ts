@@ -10,23 +10,51 @@ const apiClient = axios.create({
   },
 });
 
+const pendingRequests = new Set<string>();
+
 apiClient.interceptors.request.use((config) => {
   const token = getCookie('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
+  if (pendingRequests.has(requestKey)) {
+    const error = new Error('Duplicate request blocked');
+    (error as any).isDuplicate = true;
+    return Promise.reject(error);
+  }
+  
+  pendingRequests.add(requestKey);
   return config;
 });
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config;
+    const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
+    pendingRequests.delete(requestKey);
+    return response;
+  },
   (error) => {
+    if (error.config) {
+      const config = error.config;
+      const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
+      pendingRequests.delete(requestKey);
+    }
+
     if (error.response?.status === 401) {
       deleteCookie('token');
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
     }
+    
+    // Silence duplicate request errors to avoid toast spam
+    if (error.isDuplicate) {
+      return new Promise(() => {}); // Return a "never-resolving" promise to halt the chain
+    }
+
     return Promise.reject(error);
   }
 );

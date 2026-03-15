@@ -29,9 +29,11 @@ import {
 import { momService, authService, memberService } from "@/services";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
+import { useData } from "@/app/context/DataContext";
 
 
 export default function MoMControlPage() {
+  const { profile } = useData();
   const [moms, setMoms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,7 +41,6 @@ export default function MoMControlPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingMoM, setEditingMoM] = useState<any>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
   const [allMembers, setAllMembers] = useState<any[]>([]);
   const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
@@ -77,19 +78,9 @@ export default function MoMControlPage() {
   const domains = ["Creatives", "Web Dev", "Cloud", "Corporate", "AIML", "APP DEV", "All"];
 
   useEffect(() => {
-    fetchProfile();
     fetchMoMs();
     fetchAllMembers();
   }, [domainFilter, searchTerm]);
-
-  const fetchProfile = async () => {
-    try {
-      const res = await authService.getProfile();
-      setProfile(res.data);
-    } catch (err) {
-      console.error("Failed to fetch profile", err);
-    }
-  };
 
   const fetchMoMs = async () => {
     try {

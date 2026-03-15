@@ -7,8 +7,9 @@ import {
   Save, 
   Loader2, 
   Server,
-  TerminalSquare,
-  Activity
+  Mail,
+  ShieldCheck,
+  X
 } from "lucide-react";
 import { roomieConfigService } from "@/services";
 import { toast } from "react-hot-toast";
@@ -21,6 +22,9 @@ export default function WebsiteControlPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+
   useEffect(() => {
     fetchPaymentAmount();
   }, []);
@@ -29,7 +33,6 @@ export default function WebsiteControlPage() {
     try {
       setIsFetching(true);
       setError(null);
-      // The backend returns a configuration object, usually { value: "..." }
       const res = await roomieConfigService.getConfig("PAYMENT_AMOUNT");
       if (res.data && res.data.value) {
         setCurrentAmount(res.data.value);
@@ -41,7 +44,7 @@ export default function WebsiteControlPage() {
         setError("Access Denied: You do not have permission to view or edit this configuration.");
         toast.error("Access Denied");
       } else {
-        setError(err.response?.data?.msg || "Failed to fetch the current payment amount. Check server logs.");
+        setError(err.response?.data?.msg || "Failed to fetch the current payment amount.");
         toast.error(err.response?.data?.msg || "Failed to fetch payment amount");
       }
     } finally {
@@ -57,20 +60,36 @@ export default function WebsiteControlPage() {
       setIsSaving(true);
       setError(null);
       setSuccess(null);
-      const res = await roomieConfigService.updateConfig("PAYMENT_AMOUNT", newAmount);
+      await roomieConfigService.requestPriceChangeOTP("PAYMENT_AMOUNT", newAmount);
+      setShowOtpModal(true);
+      toast.success("Verification code sent to your email");
+    } catch (err: any) {
+      console.error("Failed to request OTP", err);
+      setError(err.response?.data?.msg || "Failed to initiate verification.");
+      toast.error(err.response?.data?.msg || "Failed to initiate verification");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleVerifyAndSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp.trim()) return;
+
+    try {
+      setIsSaving(true);
+      const res = await roomieConfigService.updateConfig("PAYMENT_AMOUNT", newAmount, otp);
       
       if (res.data && res.data.value) {
         setCurrentAmount(res.data.value);
         setSuccess("Payment amount updated successfully across the SRM Roomie website.");
-        toast.success("Payment configuration updated");
-      } else {
-        setSuccess("Payment amount completely updated.");
-        toast.success("Payment configuration updated");
+        toast.success("Price updated successfully");
+        setShowOtpModal(false);
+        setOtp("");
       }
     } catch (err: any) {
-      console.error("Failed to update payment amount", err);
-      setError(err.response?.data?.msg || "Failed to sync changes with the server.");
-      toast.error(err.response?.data?.msg || "Failed to sync changes");
+      console.error("Failed to verify OTP", err);
+      toast.error(err.response?.data?.msg || "Verification failed. Please check the code.");
     } finally {
       setIsSaving(false);
     }
@@ -162,11 +181,67 @@ export default function WebsiteControlPage() {
               ) : (
                 <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
               )}
-              {isSaving ? "Syncing..." : "Change"}
+              {isSaving ? "Requesting Code..." : "Change Account Price"}
             </button>
           </form>
         </div>
       </div>
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl md:rounded-[2rem] p-6 md:p-8 w-full max-w-md relative shadow-2xl">
+            <button 
+              onClick={() => { setShowOtpModal(false); setOtp(""); }} 
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground/40 hover:text-white transition-all"
+            >
+              <X className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+            
+            <div className="text-center mb-6 md:mb-8">
+               <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4 border border-primary/20">
+                  <ShieldCheck className="w-6 h-6 md:w-8 md:h-8 text-primary" />
+               </div>
+               <h3 className="text-lg md:text-xl font-bold text-white tracking-tight">Verify Change</h3>
+               <p className="text-[10px] md:text-xs text-muted-foreground/60 mt-2 font-medium">Entering ₹{newAmount} as new payment amount. Please enter the 6-digit code sent to your email.</p>
+            </div>
+
+            <form onSubmit={handleVerifyAndSave} className="space-y-4 md:space-y-6">
+              <div className="relative group">
+                <Mail className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground/20 group-focus-within:text-primary transition-colors" />
+                <input 
+                  type="text"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl py-4 md:py-5 pl-10 md:pl-14 text-center text-2xl md:text-3xl font-black tracking-[0.3em] md:tracking-[0.4em] outline-none focus:border-primary/50 text-white placeholder:text-white/5"
+                  placeholder="000000"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isSaving || otp.length < 6}
+                className="w-full py-3.5 md:py-4 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-blue-600 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" /> : <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+                Authorize & Sync
+              </button>
+
+              <button 
+                type="button"
+                onClick={handleUpdateAmount}
+                disabled={isSaving}
+                className="w-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all text-center"
+              >
+                Resend Code
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

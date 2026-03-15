@@ -23,17 +23,20 @@ import {
   CalendarDays,
   Edit2,
   Trash2,
-  ShieldCheck
+  ShieldCheck,
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { taskService } from "@/services/taskService";
 import { authService } from "@/services/authService";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
+import { useData } from "@/app/context/DataContext";
 
 export default function TasksPage() {
   const [activeTab, setActiveTab] = useState("My Tasks");
   const [tasks, setTasks] = useState<any[]>([]);
-  const [profile, setProfile] = useState<any>(null);
+  const { profile, refreshProfile } = useData();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -94,21 +97,19 @@ export default function TasksPage() {
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      const [profileRes, statsRes] = await Promise.all([
-        authService.getProfile(),
-        taskService.getTaskStats()
-      ]);
-      setProfile(profileRes.data);
+      const statsRes = await taskService.getTaskStats();
       setStats(statsRes.data);
       
-      if (isHighLevelAdmin(profileRes.data.domain?.role)) {
-        setActiveTab("Org Tracking");
-      }
-      
-      if (profileRes.data.domain.role === "LEAD" || profileRes.data.domain.role === "ASSOCIATE") {
-        const membersRes = await authService.getTeamMembers();
-        // Filter out itself if needed, but usually leads can assign to themselves too if they want
-        setTeamMembers(membersRes.data);
+      if (profile) {
+        if (isHighLevelAdmin(profile.domain?.role)) {
+          setActiveTab("Org Tracking");
+        }
+        
+        if (profile.domain?.role === "LEAD" || profile.domain?.role === "ASSOCIATE") {
+          const membersRes = await authService.getTeamMembers();
+          // Filter out itself if needed, but usually leads can assign to themselves too if they want
+          setTeamMembers(membersRes.data);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch initial data", err);
