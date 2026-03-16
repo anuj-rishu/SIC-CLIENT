@@ -27,14 +27,27 @@ export function usePWA() {
       setCanInstall(true);
     };
 
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setCanInstall(false);
+      setIsStandalone(true);
+      localStorage.setItem("pwa_prompt_seen", "true");
+      // Optionally notify the user
+      toast.success("SIC CONSOLE installed successfully!");
+    };
+
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     // For iOS, we can always "install" via manual instructions if not standalone
     if (isIOS && !checkStandalone) {
       setCanInstall(true);
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
 
   const installApp = async () => {

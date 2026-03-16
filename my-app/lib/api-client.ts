@@ -10,39 +10,47 @@ const apiClient = axios.create({
   },
 });
 
-const pendingRequests = new Set<string>();
+// Map to store inflight promises for request deduplication
+const inflightRequests = new Map<string, Promise<any>>();
+
+// Cache original request method
+const originalRequest = apiClient.request.bind(apiClient);
+
+// Override request method for deduplication
+apiClient.request = function (config: any) {
+  const method = config.method?.toUpperCase() || 'GET';
+  const requestKey = `${method}:${config.url}`;
+
+  // Only deduplicate GET requests to avoid side-effect issues with POST/PUT/DELETE
+  if (method === 'GET') {
+    if (inflightRequests.has(requestKey)) {
+      return inflightRequests.get(requestKey)!;
+    }
+
+    const promise = originalRequest(config).finally(() => {
+      inflightRequests.delete(requestKey);
+    });
+
+    inflightRequests.set(requestKey, promise);
+    return promise;
+  }
+
+  return originalRequest(config);
+};
 
 apiClient.interceptors.request.use((config) => {
   const token = getCookie('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
-  const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
-  if (pendingRequests.has(requestKey)) {
-    const error = new Error('Duplicate request blocked');
-    (error as any).isDuplicate = true;
-    return Promise.reject(error);
-  }
-  
-  pendingRequests.add(requestKey);
   return config;
 });
 
 apiClient.interceptors.response.use(
   (response) => {
-    const config = response.config;
-    const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
-    pendingRequests.delete(requestKey);
     return response;
   },
   (error) => {
-    if (error.config) {
-      const config = error.config;
-      const requestKey = `${config.method?.toUpperCase()}:${config.url}`;
-      pendingRequests.delete(requestKey);
-    }
-
     if (error.response?.status === 401) {
       deleteCookie('token');
       if (typeof window !== 'undefined' && window.location.pathname !== '/') {
@@ -50,15 +58,7 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 429) {
-      // Just pass through the rate limit error so DataContext can show the message
-      return Promise.reject(error);
-    }
-    
-    if (error.isDuplicate) {
-      return Promise.reject(error);
-    }
-
+    // Pass through all other errors (429, 500, etc.)
     return Promise.reject(error);
   }
 );
