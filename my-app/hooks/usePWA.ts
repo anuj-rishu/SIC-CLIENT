@@ -39,7 +39,7 @@ export function usePWA() {
 
   const installApp = async () => {
     if (isStandalone) {
-      toast.success("Roomie is already installed!");
+      toast.success("SIC CONSOLE is already installed!");
       return;
     }
 
