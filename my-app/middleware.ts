@@ -5,16 +5,26 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Protect dashboard routes
-  if (pathname.startsWith('/dashboard')) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+  const isPublicRoute = pathname === '/';
+  
+  const isStaticFile = pathname.startsWith('/_next') || 
+                       pathname.startsWith('/api') ||
+                       pathname === '/favicon.ico' ||
+                       pathname === '/manifest.json' ||
+                       pathname.includes('.'); 
+
+  if (isStaticFile) {
+    return NextResponse.next();
   }
 
-  // Redirect away from login if already authenticated
-  if (pathname === '/') {
-    if (token) {
+  
+  if (!token) {
+ 
+    if (!isPublicRoute) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  } else {
+    if (isPublicRoute) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
@@ -23,5 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
