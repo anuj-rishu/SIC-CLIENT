@@ -26,7 +26,7 @@ export default function LoginPage() {
       const response = await authService.login({ email, password });
       const { token } = response.data;
       
-      setCookie('token', token, { maxAge: 60 * 60 * 24 }); // 24 hours
+      setCookie('token', token, { maxAge: 60 * 60 * 24 * 30 }); // 30 days
       window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.response?.data?.msg || 'Invalid credentials');
@@ -49,7 +49,7 @@ export default function LoginPage() {
       const verRes = await authService.verifyPasskeyLogin(authResp, email || undefined, challengeId);
       const { token } = verRes.data;
       
-      setCookie('token', token, { maxAge: 60 * 60 * 24 });
+      setCookie('token', token, { maxAge: 60 * 60 * 24 * 30 });
       window.location.href = '/dashboard';
     } catch (err: any) {
       console.error(err);
