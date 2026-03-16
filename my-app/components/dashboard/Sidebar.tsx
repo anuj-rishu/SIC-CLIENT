@@ -17,6 +17,7 @@ import {
   FileText
 } from 'lucide-react';
 import { authService } from '@/services';
+import { deleteCookie } from 'cookies-next';
 
 const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
@@ -38,9 +39,10 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
     } catch (err) {
       console.error('Server logout failed', err);
     } finally {
+      deleteCookie('token');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      router.push('/');
+      window.location.href = '/';
     }
   };
 
