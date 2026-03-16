@@ -936,11 +936,33 @@ export default function MeetingsPage() {
                         </div>
                          <div className="space-y-2">
                             <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Meeting Date</label>
-                            <input required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-primary transition-all shadow-inner" placeholder="dd/mm/yyyy" />
+                            <div className="relative group">
+                               <div className="absolute left-0 inset-y-0 pl-4 flex items-center pointer-events-none z-10">
+                                  <Calendar className="w-4 h-4 text-primary/40 group-focus-within:text-primary transition-colors duration-300" />
+                               </div>
+                               <input 
+                                  required 
+                                  type="date" 
+                                  value={formData.date} 
+                                  onChange={(e) => setFormData({...formData, date: e.target.value})} 
+                                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-primary/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-primary/5 transition-all duration-300 shadow-inner appearance-none calendar-picker-indicator-white" 
+                               />
+                            </div>
                          </div>
                          <div className="space-y-2">
                             <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Meeting Time</label>
-                            <input required value={formData.time} onChange={(e) => setFormData({...formData, time: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-primary transition-all" placeholder="hh:mm" />
+                            <div className="relative group">
+                               <div className="absolute left-0 inset-y-0 pl-4 flex items-center pointer-events-none z-10">
+                                  <Clock className="w-4 h-4 text-primary/40 group-focus-within:text-primary transition-colors duration-300" />
+                               </div>
+                               <input 
+                                  required 
+                                  type="time" 
+                                  value={formData.time} 
+                                  onChange={(e) => setFormData({...formData, time: e.target.value})} 
+                                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-primary/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-primary/5 transition-all duration-300 shadow-inner appearance-none" 
+                               />
+                            </div>
                          </div>
                         <div className="space-y-2">
                            <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Location</label>
@@ -954,7 +976,17 @@ export default function MeetingsPage() {
                         </div>
                          <div className="space-y-2">
                             <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Next Meeting Date (Optional)</label>
-                            <input value={formData.nextMeetingDate} onChange={(e) => setFormData({...formData, nextMeetingDate: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-primary transition-all" placeholder="dd/mm/yyyy" />
+                            <div className="relative group">
+                               <div className="absolute left-0 inset-y-0 pl-4 flex items-center pointer-events-none z-10">
+                                  <Calendar className="w-4 h-4 text-primary/40 group-focus-within:text-primary transition-colors duration-300" />
+                               </div>
+                               <input 
+                                  type="date" 
+                                  value={formData.nextMeetingDate} 
+                                  onChange={(e) => setFormData({...formData, nextMeetingDate: e.target.value})} 
+                                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-primary/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-primary/5 transition-all duration-300 shadow-inner appearance-none calendar-picker-indicator-white" 
+                               />
+                            </div>
                          </div>
                      </div>
                   </section>
@@ -1113,11 +1145,11 @@ export default function MeetingsPage() {
                                  </div>
                                  <div className="md:col-span-12 lg:col-span-3 space-y-1">
                                     <label className="text-[8px] font-black text-muted-foreground/20 uppercase ml-1">Timeline Deadline</label>
-                                    <input value={item.deadline} onChange={(e) => {
+                                    <input type="date" value={item.deadline} onChange={(e) => {
                                        const updated = [...formData.actionItems];
                                        updated[i].deadline = e.target.value;
                                        setFormData({...formData, actionItems: updated});
-                                    }} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs text-white outline-none focus:border-primary transition-all" placeholder="dd/mm/yyyy" />
+                                    }} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs text-white outline-none focus:border-primary transition-all appearance-none calendar-picker-indicator-white" />
                                  </div>
                                  <div className="md:col-span-2 lg:col-span-1 flex justify-center pb-1">
                                     {formData.actionItems.length > 1 && (
