@@ -22,16 +22,20 @@ import {
   UserCircle,
   Fingerprint,
   Trash2,
+  Smartphone,
+  Download,
 } from "lucide-react";
 import { authService } from "@/services";
 import { startRegistration } from "@simplewebauthn/browser";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
 import { useData } from "@/app/context/DataContext";
+import { usePWA } from "@/hooks/usePWA";
 
 
 export default function ProfilePage() {
   const { profile: contextProfile, refreshProfile } = useData();
+  const { isStandalone, installApp } = usePWA();
   const [profile, setProfile] = useState<any>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -382,6 +386,22 @@ export default function ProfilePage() {
                  </div>
                  <ChevronRight className="w-3 h-3 text-muted-foreground/20 group-hover:text-white transition-all group-hover:translate-x-1" />
                </button>
+
+               {!isStandalone && (
+                 <button 
+                   onClick={installApp}
+                   className="flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-2xl group hover:border-primary transition-all sm:col-span-2"
+                 >
+                   <div className="flex items-center gap-3">
+                      <Smartphone className="w-4 h-4 text-primary" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-widest">Install Web App</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">Standalone</span>
+                      <Download className="w-3 h-3 text-primary" />
+                   </div>
+                 </button>
+               )}
             </div>
 
             <div className="border-t border-white/5 pt-5">

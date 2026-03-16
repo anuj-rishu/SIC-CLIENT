@@ -56,7 +56,7 @@ apiClient.interceptors.response.use(
     }
     
     if (error.isDuplicate) {
-      return new Promise(() => {}); // Return a "never-resolving" promise to halt the chain
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

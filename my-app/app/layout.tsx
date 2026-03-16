@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { DataProvider } from "./context/DataContext";
+import InstallPrompt from "@/components/PWA/InstallPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SIC CONSOLE",
   description: "Secure Admin Console for SIC",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Roomie",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#3b82f6",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -52,6 +66,7 @@ export default function RootLayout({
           },
         }} />
         <DataProvider>
+          <InstallPrompt />
           {children}
         </DataProvider>
       </body>

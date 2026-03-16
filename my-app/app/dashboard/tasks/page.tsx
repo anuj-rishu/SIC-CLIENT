@@ -38,7 +38,8 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([]);
   const { profile, refreshProfile } = useData();
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState("All");
@@ -74,11 +75,49 @@ export default function TasksPage() {
   const isAssignableRole = ["FOUNDER", "PRESIDENT", "VICE PRESIDENT", "VICEPRESIDENT", "TECHNICAL DIRECTOR", "LEAD", "ASSOCIATE"].includes(profile?.domain?.role?.toUpperCase() || "");
 
   useEffect(() => {
-    fetchInitialData();
+    const initialize = async () => {
+      try {
+        await fetchStats();
+      } finally {
+        // We don't set initialLoading false here yet, 
+        // because we want to wait for the profile observer to finish his first run
+      }
+    };
+    initialize();
   }, []);
 
+  // Separate effect to handle profile-dependent initialization
   useEffect(() => {
     if (profile) {
+      if (isHighLevelAdmin(profile.domain?.role)) {
+        setActiveTab("Org Tracking");
+      }
+      
+      if (isAssignableRole) {
+        fetchAssignableMembers();
+      }
+      
+      // Once profile is here and we've set the tab, we can do the first fetch
+      const firstFetch = async () => {
+        try {
+          if (isHighLevelAdmin(profile.domain?.role)) {
+            await fetchAdminTasks();
+          } else {
+            await fetchMyTasks();
+          }
+        } finally {
+          setInitialLoading(false);
+        }
+      };
+      
+      if (initialLoading) {
+        firstFetch();
+      }
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile && !initialLoading) {
       if (activeTab === "My Tasks") {
         fetchMyTasks();
       } else if (activeTab === "Team Management") {
@@ -87,33 +126,19 @@ export default function TasksPage() {
         fetchAdminTasks();
       }
     }
-  }, [activeTab, profile, selectedDomain, selectedStatus, selectedPriority, currentPage, adminSearch]);
+  }, [activeTab, selectedDomain, selectedStatus, selectedPriority, currentPage, adminSearch]);
 
   const isHighLevelAdmin = (role: string) => {
     const r = role?.toUpperCase();
     return r === "FOUNDER" || r === "PRESIDENT" || r === "VICE PRESIDENT" || r === "VICEPRESIDENT";
   };
 
-  const fetchInitialData = async () => {
+  const fetchAssignableMembers = async () => {
     try {
-      setLoading(true);
-      const statsRes = await taskService.getTaskStats();
-      setStats(statsRes.data);
-      
-      if (profile) {
-        if (isHighLevelAdmin(profile.domain?.role)) {
-          setActiveTab("Org Tracking");
-        }
-        
-        if (isAssignableRole) {
-          const membersRes = await authService.getAssignableMembers();
-          setTeamMembers(membersRes.data);
-        }
-      }
+      const membersRes = await authService.getAssignableMembers();
+      setTeamMembers(membersRes.data);
     } catch (err) {
-      console.error("Failed to fetch initial data", err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch members", err);
     }
   };
 
@@ -132,7 +157,8 @@ export default function TasksPage() {
       const res = await taskService.getMyTasks(currentPage, selectedStatus, selectedPriority, adminSearch); 
       setTasks(res.data.tasks);
       setPagination(res.data.pagination);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.isDuplicate) return;
       console.error("Failed to fetch my tasks", err);
     } finally {
       setLoading(false);
@@ -145,7 +171,8 @@ export default function TasksPage() {
       const res = await taskService.getTeamTasks(selectedStatus, currentPage, selectedPriority, adminSearch);
       setTasks(res.data.tasks);
       setPagination(res.data.pagination);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.isDuplicate) return;
       console.error("Failed to fetch team tasks", err);
     } finally {
       setLoading(false);
@@ -158,7 +185,8 @@ export default function TasksPage() {
       const res = await taskService.getAllTasksForAdmin(selectedDomain, currentPage, selectedStatus, adminSearch, selectedPriority);
       setTasks(res.data.tasks);
       setPagination(res.data.pagination);
-    } catch (err) {
+    } catch (err: any) {
+      if (err.isDuplicate) return;
       console.error("Failed to fetch admin tasks", err);
     } finally {
       setLoading(false);
@@ -311,10 +339,11 @@ export default function TasksPage() {
     }
   };
 
-  if (loading && tasks.length === 0) {
+  if (initialLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin opacity-40" />
+        <p className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] animate-pulse">Syncing Task Matrix...</p>
       </div>
     );
   }
