@@ -37,7 +37,7 @@ import { useData } from "@/app/context/DataContext";
 
 
 
-export default function MoMControlPage() {
+export default function MeetingsPage() {
   const { profile } = useData();
   const [moms, setMoms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,6 +54,12 @@ export default function MoMControlPage() {
   const [expandedDomains, setExpandedDomains] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+  const [meetingStep, setMeetingStep] = useState(1);
+  const meetingSteps = [
+    { id: 1, title: "Logistics", icon: Calendar },
+    { id: 2, title: "Participants", icon: Users },
+    { id: 3, title: "Briefing", icon: FileText },
+  ];
 
   const [meetingFormData, setMeetingFormData] = useState({
     title: "",
@@ -193,6 +199,7 @@ export default function MoMControlPage() {
         participantIds: []
       });
     }
+    setMeetingStep(1);
     setShowMeetingModal(true);
   };
 
@@ -650,18 +657,41 @@ export default function MoMControlPage() {
                      </div>
                      <div>
                          <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-widest">{editingMeeting ? "Modify Session" : "Schedule New Session"}</h3>
-                        <p className="text-[9px] md:text-[10px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] mt-1">{editingMeeting ? "Update details and participants" : "Google Meet links will be auto-generated"}</p>
-                     </div>
+                         <p className="text-[8px] md:text-[9px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] mt-0.5">Step {meetingStep} of 3 • {meetingSteps[meetingStep-1].title}</p>
+                      </div>
                   </div>
-                  <button onClick={() => setShowMeetingModal(false)} className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 rounded-lg md:rounded-xl text-muted-foreground hover:text-white transition-all border border-white/5">
-                     <X className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
+                  <div className="flex items-center gap-3 md:gap-6">
+                      {/* Progress Indicator */}
+                      <div className="hidden md:flex items-center gap-2">
+                         {meetingSteps.map((step) => (
+                            <React.Fragment key={step.id}>
+                               <div className={`flex items-center justify-center w-8 h-8 rounded-xl border transition-all ${
+                                  meetingStep >= step.id 
+                                  ? 'bg-primary/20 border-primary/40 text-primary shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
+                                  : 'bg-white/5 border-white/10 text-muted-foreground/20'
+                               }`}>
+                                  <step.icon className="w-4 h-4" />
+                               </div>
+                               {step.id < 3 && (
+                                  <div className={`w-4 md:w-8 h-0.5 rounded-full transition-all ${
+                                     meetingStep > step.id ? 'bg-primary/40' : 'bg-white/5'
+                                  }`} />
+                               )}
+                            </React.Fragment>
+                         ))}
+                      </div>
+
+                      <button onClick={() => setShowMeetingModal(false)} className="self-end md:self-center p-2 md:p-2.5 bg-white/5 hover:bg-white/10 rounded-lg md:rounded-xl text-muted-foreground hover:text-white transition-all border border-white/5">
+                         <X className="w-4 h-4 md:w-5 md:h-5" />
+                      </button>
+                   </div>
                </div>
             </div>
 
             <form onSubmit={handleScheduleMeeting} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-10 md:pt-8 space-y-8 md:space-y-10 pb-32">
-               {/* Basic Info Section */}
-               <section className="space-y-6">
+               {/* Step 1: Logistics */}
+               {meetingStep === 1 && (
+                  <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center gap-2 mb-2">
                      <div className="w-1.5 h-4 bg-primary rounded-full"></div>
                      <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Meeting Details</h4>
@@ -704,40 +734,11 @@ export default function MoMControlPage() {
                        </div>
                   </div>
                </section>
+               )}
 
-               {/* Domain Selection Section */}
-               <section className="space-y-6">
-                  <div className="flex items-center gap-2 mb-2">
-                     <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Invited Domains</h4>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                     {domains.map(d => (
-                        <button
-                           key={d}
-                           type="button"
-                           onClick={() => {
-                              const current = meetingFormData.domains;
-                              if (current.includes(d)) {
-                                 setMeetingFormData({...meetingFormData, domains: current.filter(item => item !== d)});
-                              } else {
-                                 setMeetingFormData({...meetingFormData, domains: [...current, d]});
-                              }
-                           }}
-                           className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
-                              meetingFormData.domains.includes(d) 
-                              ? "bg-primary/20 border-primary/40 text-primary shadow-[0_5px_15px_-5px_rgba(59,130,246,0.3)]" 
-                              : "bg-white/5 border-white/10 text-muted-foreground/40 hover:text-white hover:border-white/20"
-                           }`}
-                        >
-                           {d}
-                        </button>
-                     ))}
-                  </div>
-               </section>
-
-               {/* Personnel Selection Section */}
-               <section className="space-y-6">
+               {/* Step 2: Participants */}
+               {meetingStep === 2 && (
+                  <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
                      <div className="flex items-center gap-2">
                         <div className="w-1.5 h-4 bg-primary rounded-full"></div>
@@ -828,39 +829,48 @@ export default function MoMControlPage() {
                      })}
                   </div>
                </section>
+               )}
 
-               {/* Agenda Section */}
-               <section className="space-y-6">
-                  <div className="flex items-center gap-2 mb-2">
-                     <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Meeting Agenda</h4>
-                  </div>
-                  <textarea rows={4} value={meetingFormData.agenda} onChange={(e) => setMeetingFormData({...meetingFormData, agenda: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Primary objectives..." />
-               </section>
+               {/* Step 3: Agenda */}
+               {meetingStep === 3 && (
+                  <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                     <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1.5 h-4 bg-primary rounded-full"></div>
+                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Meeting Agenda</h4>
+                     </div>
+                     <textarea rows={4} value={meetingFormData.agenda} onChange={(e) => setMeetingFormData({...meetingFormData, agenda: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Primary objectives..." />
+                  </section>
+               )}
              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 bg-card/90 backdrop-blur-3xl border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 z-20">
+                <div className="hidden md:flex items-center gap-4">
+                   <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                      <Target className="w-6 h-6" />
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black text-white uppercase tracking-widest">Authenticated Preparation</p>
+                     <div className="flex items-center gap-2 mt-0.5">
+                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                         <p className="text-xs font-bold text-muted-foreground">{profile?.name || "Indexing System..."}</p>
+                     </div>
+                   </div>
+                </div>
                 <div className="flex flex-row items-center gap-2 w-full md:w-auto">
-                   <button 
-                      type="button" 
-                      onClick={() => {
-                         setShowMeetingModal(false);
-                         setEditingMeeting(null);
-                         setMeetingFormData({
-                            title: "",
-                            agenda: "",
-                            date: "",
-                            time: "",
-                            domains: [],
-                            participantIds: []
-                         });
-                      }} 
-                      className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-all whitespace-nowrap active:scale-95"
-                   >
-                      Discard
-                   </button>
-                   <button type="submit" disabled={actionLoading} className="flex-[2] md:flex-none py-3 md:py-4 px-6 md:px-12 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 md:gap-3 group">
-                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : editingMeeting ? <CheckCircle2 className="w-4 h-4 group-hover:scale-110 transition-transform" /> : <Video className="w-4 h-4 group-hover:scale-110 transition-transform" />}
-                      {editingMeeting ? "Update Session" : "Schedule & Generate Link"}
-                   </button>
+                   <button type="button" onClick={() => { setShowMeetingModal(false); setEditingMeeting(null); setMeetingFormData({ title: "", agenda: "", date: "", time: "", domains: [], participantIds: [] }); }} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-all whitespace-nowrap active:scale-95">Discard</button>
+                   
+                   {meetingStep > 1 && (
+                      <button type="button" onClick={() => setMeetingStep(prev => prev - 1)} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white border border-white/5 hover:border-white/10 transition-all whitespace-nowrap active:scale-95">Back</button>
+                   )}
+
+                   {meetingStep < 3 ? (
+                      <button type="button" onClick={() => setMeetingStep(prev => prev + 1)} className="flex-[2] md:flex-none py-3 md:py-4 px-6 md:px-12 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 md:gap-3">
+                         Next <ChevronRight className="w-4 h-4" />
+                      </button>
+                   ) : (
+                      <button type="submit" disabled={actionLoading} className="flex-[2] md:flex-none py-3 md:py-4 px-6 md:px-12 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 md:gap-3">
+                         {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : editingMeeting ? <CheckSquare className="w-4 h-4 shadow-sm" /> : <Plus className="w-4 h-4 shadow-sm" />}
+                         {editingMeeting ? "Update Session" : "Schedule Session"}
+                      </button>
+                   )}
                 </div>
              </div>
             </form>

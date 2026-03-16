@@ -24,7 +24,7 @@ const menuItems = [
   { name: 'Members', icon: Users, path: '/dashboard/members' },
   { name: 'Interviews', icon: CalendarDays, path: '/dashboard/interviews' },
   { name: 'Tasks', icon: ListTodo, path: '/dashboard/tasks' },
-  { name: 'MOM control', icon: FileText, path: '/dashboard/mom-control' },
+  { name: 'Meetings', icon: FileText, path: '/dashboard/meetings' },
   { name: 'Website Control', icon: Globe, path: '/dashboard/website-control' },
 ];
 
