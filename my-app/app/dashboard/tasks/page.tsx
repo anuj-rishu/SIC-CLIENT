@@ -71,7 +71,7 @@ export default function TasksPage() {
     onConfirm: async () => {},
   });
 
-  const isLeadOrAssociate = profile?.domain?.role === "LEAD" || profile?.domain?.role === "ASSOCIATE";
+  const isAssignableRole = ["FOUNDER", "PRESIDENT", "VICE PRESIDENT", "VICEPRESIDENT", "TECHNICAL DIRECTOR", "LEAD", "ASSOCIATE"].includes(profile?.domain?.role?.toUpperCase() || "");
 
   useEffect(() => {
     fetchInitialData();
@@ -105,9 +105,8 @@ export default function TasksPage() {
           setActiveTab("Org Tracking");
         }
         
-        if (profile.domain?.role === "LEAD" || profile.domain?.role === "ASSOCIATE") {
-          const membersRes = await authService.getTeamMembers();
-          // Filter out itself if needed, but usually leads can assign to themselves too if they want
+        if (isAssignableRole) {
+          const membersRes = await authService.getAssignableMembers();
           setTeamMembers(membersRes.data);
         }
       }
@@ -224,12 +223,15 @@ export default function TasksPage() {
         setActionLoading(true);
         try {
           await taskService.deleteTask(taskId);
-          fetchTeamTasks();
+          if (activeTab === "Team Management") fetchTeamTasks();
+          else if (activeTab === "Org Tracking") fetchAdminTasks();
+          else fetchMyTasks();
           fetchStats();
           toast.success("Task deleted successfully");
         } catch (err: any) {
           toast.error(err.response?.data?.msg || "Failed to delete task");
         } finally {
+          setActionLoading(true); // Should probably be false but checking original
           setActionLoading(false);
           setConfirmState(prev => ({ ...prev, isOpen: false }));
         }
@@ -360,10 +362,10 @@ export default function TasksPage() {
       {/* Unified Filter Suite */}
       <div className="space-y-4 md:space-y-6 animate-in slide-in-from-top duration-700 bg-white/[0.02] border border-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] backdrop-blur-3xl">
         {/* Action Row: Tabs & Assign */}
-        {(isLeadOrAssociate || isHighLevelAdmin(profile?.domain?.role)) && (
+        {(isAssignableRole || isHighLevelAdmin(profile?.domain?.role)) && (
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-2">
             <div className="flex items-center gap-4">
-              {isLeadOrAssociate && (
+              {(profile?.domain?.role === "LEAD" || profile?.domain?.role === "ASSOCIATE") && (
                 <div className="flex bg-white/5 p-1 rounded-2xl w-full md:w-auto">
                   <button
                     onClick={() => { setActiveTab("Team Management"); setCurrentPage(1); }}
@@ -379,7 +381,7 @@ export default function TasksPage() {
               )}
             </div>
 
-            {isLeadOrAssociate && (
+            {isAssignableRole && (
               <button 
                 onClick={() => setShowAssignModal(true)}
                 className="group relative flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 hover:bg-primary px-4 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-2xl transition-all shadow-xl shadow-primary/5"
@@ -563,22 +565,26 @@ export default function TasksPage() {
                            </button>
                          )}
 
-                          {activeTab === "Team Management" && (
+                          {(activeTab === "Team Management" || (activeTab === "Org Tracking" && isHighLevelAdmin(profile?.domain?.role))) && (
                             <div className="flex items-center gap-2">
-                               <button 
-                                 onClick={() => openEditModal(task)}
-                                 className="p-2 md:p-2.5 bg-white/5 border border-white/5 rounded-xl text-muted-foreground/40 hover:bg-white/10 hover:text-white transition-all"
-                               >
-                                 <Edit2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                               </button>
-                               <button 
-                                 onClick={() => handleDeleteTask(task._id)}
-                                 className="p-2 md:p-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
-                               >
-                                 <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                               </button>
+                               {(profile?._id === task.assignedBy?._id || isHighLevelAdmin(profile?.domain?.role)) && (
+                                 <>
+                                   <button 
+                                     onClick={() => openEditModal(task)}
+                                     className="p-2 md:p-2.5 bg-white/5 border border-white/5 rounded-xl text-muted-foreground/40 hover:bg-white/10 hover:text-white transition-all"
+                                   >
+                                     <Edit2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                                   </button>
+                                   <button 
+                                     onClick={() => handleDeleteTask(task._id)}
+                                     className="p-2 md:p-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
+                                   >
+                                     <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                                   </button>
+                                 </>
+                               )}
                                
-                               {task.status === "UNDER_REVIEW" && (
+                               {task.status === "UNDER_REVIEW" && activeTab === "Team Management" && (
                                  <div className="flex items-center gap-2 ml-1 md:ml-2">
                                     <button 
                                       onClick={() => handleApprove(task._id)}

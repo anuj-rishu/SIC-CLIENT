@@ -17,6 +17,7 @@ export const authService = {
   requestEmailChange: (newEmail: string) => apiClient.post('/auth/request-email-change', { newEmail }),
   verifyEmailChange: (data: any) => apiClient.put('/auth/verify-email-change', data),
   getTeamMembers: () => apiClient.get('/auth/team-members'),
+  getAssignableMembers: () => apiClient.get('/auth/assignable-members'),
   logout: () => apiClient.post('/auth/logout'),
   generatePasskeyRegisterOptions: () => apiClient.get('/auth/passkey/register/options'),
   verifyPasskeyRegister: (data: any) => apiClient.post('/auth/passkey/register/verify', data),
