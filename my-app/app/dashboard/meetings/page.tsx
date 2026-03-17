@@ -245,13 +245,23 @@ export default function MeetingsPage() {
         toast.error("Please select at least one attendee");
         return;
     }
+    // Filter out completely empty action items
+    const filteredActionItems = formData.actionItems.filter(
+      (item: any) => item.task.trim() || item.responsiblePerson.trim() || item.deadline.trim()
+    );
+
+    const submissionData = {
+      ...formData,
+      actionItems: filteredActionItems
+    };
+
     setActionLoading(true);
     try {
       if (editingMoM) {
-        await momService.updateMoM(editingMoM._id, formData);
+        await momService.updateMoM(editingMoM._id, submissionData);
         toast.success("Minutes updated successfully");
       } else {
-        await momService.createMoM(formData);
+        await momService.createMoM(submissionData);
         toast.success("Minutes created successfully");
       }
       setShowModal(false);
@@ -1145,11 +1155,21 @@ export default function MeetingsPage() {
                                  </div>
                                  <div className="md:col-span-12 lg:col-span-3 space-y-1">
                                     <label className="text-[8px] font-black text-muted-foreground/20 uppercase ml-1">Timeline Deadline</label>
-                                    <input type="date" value={item.deadline} onChange={(e) => {
-                                       const updated = [...formData.actionItems];
-                                       updated[i].deadline = e.target.value;
-                                       setFormData({...formData, actionItems: updated});
-                                    }} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs text-white outline-none focus:border-primary transition-all appearance-none calendar-picker-indicator-white" />
+                                    <div className="relative group/field">
+                                     <div className="absolute left-0 inset-y-0 pl-3 flex items-center pointer-events-none z-10">
+                                        <Calendar className="w-3.5 h-3.5 text-primary/40 group-focus-within/field:text-primary transition-colors" />
+                                     </div>
+                                     <input 
+                                        type="date" 
+                                        value={item.deadline} 
+                                        onChange={(e) => {
+                                           const updated = [...formData.actionItems];
+                                           updated[i].deadline = e.target.value;
+                                           setFormData({...formData, actionItems: updated});
+                                        }} 
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 md:py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-primary transition-all appearance-none [color-scheme:dark]" 
+                                     />
+                                  </div>
                                  </div>
                                  <div className="md:col-span-2 lg:col-span-1 flex justify-center pb-1">
                                     {formData.actionItems.length > 1 && (

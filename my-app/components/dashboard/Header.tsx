@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Bell, Menu, User, ShieldCheck } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useData } from '../../app/context/DataContext';
+import { RefreshButton } from './RefreshButton';
 
 export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { profile } = useData();
@@ -54,6 +55,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
 
       <div className="flex items-center gap-5">
+        <RefreshButton />
         <div className="flex items-center gap-3 pl-2 group cursor-pointer">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-black text-white group-hover:text-primary transition-colors">{profile?.name || 'Admin'}</p>

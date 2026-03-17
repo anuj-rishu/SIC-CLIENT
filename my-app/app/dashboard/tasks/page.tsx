@@ -304,8 +304,10 @@ export default function TasksPage() {
   const handleApprove = async (taskId: string) => {
     try {
       await taskService.approveTask(taskId);
-      fetchTeamTasks();
+      if (activeTab === "Org Tracking") fetchAdminTasks();
+      else fetchTeamTasks();
       fetchStats();
+      toast.success("Task approved successfully");
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to approve task");
     }
@@ -314,8 +316,10 @@ export default function TasksPage() {
   const handleReject = async (taskId: string) => {
     try {
       await taskService.rejectTask(taskId);
-      fetchTeamTasks();
+      if (activeTab === "Org Tracking") fetchAdminTasks();
+      else fetchTeamTasks();
       fetchStats();
+      toast.success("Task sent back to pending");
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to reject task");
     }
@@ -394,8 +398,19 @@ export default function TasksPage() {
         {(isAssignableRole || isHighLevelAdmin(profile?.domain?.role)) && (
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-2">
             <div className="flex items-center gap-4">
-              {(profile?.domain?.role === "LEAD" || profile?.domain?.role === "ASSOCIATE") && (
-                <div className="flex bg-white/5 p-1 rounded-2xl w-full md:w-auto">
+              <div className="flex bg-white/5 p-1 rounded-2xl w-full md:w-auto overflow-x-auto no-scrollbar">
+                <button
+                  onClick={() => { setActiveTab("My Tasks"); setCurrentPage(1); }}
+                  className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
+                    activeTab === "My Tasks" 
+                      ? "bg-primary text-white shadow-[0_10px_20px_-5px_rgba(59,130,246,0.3)]" 
+                      : "text-muted-foreground/40 hover:text-white"
+                  }`}
+                >
+                  My Tasks
+                </button>
+
+                {(profile?.domain?.role === "LEAD" || profile?.domain?.role === "ASSOCIATE") && (
                   <button
                     onClick={() => { setActiveTab("Team Management"); setCurrentPage(1); }}
                     className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
@@ -406,8 +421,21 @@ export default function TasksPage() {
                   >
                     Team
                   </button>
-                </div>
-              )}
+                )}
+
+                {isHighLevelAdmin(profile?.domain?.role) && (
+                  <button
+                    onClick={() => { setActiveTab("Org Tracking"); setCurrentPage(1); }}
+                    className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
+                      activeTab === "Org Tracking" 
+                        ? "bg-primary text-white shadow-[0_10px_20px_-5px_rgba(59,130,246,0.3)]" 
+                        : "text-muted-foreground/40 hover:text-white"
+                    }`}
+                  >
+                    Org
+                  </button>
+                )}
+              </div>
             </div>
 
             {isAssignableRole && (
@@ -613,7 +641,7 @@ export default function TasksPage() {
                                  </>
                                )}
                                
-                               {task.status === "UNDER_REVIEW" && activeTab === "Team Management" && (
+                               {(task.status === "UNDER_REVIEW" && (activeTab === "Team Management" || activeTab === "Org Tracking")) && (
                                  <div className="flex items-center gap-2 ml-1 md:ml-2">
                                     <button 
                                       onClick={() => handleApprove(task._id)}
@@ -801,13 +829,18 @@ export default function TasksPage() {
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                      <div className="space-y-1.5">
                         <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Deadline</label>
-                        <input 
-                          required
-                          value={taskData.deadline}
-                          onChange={(e) => setTaskData({...taskData, deadline: e.target.value})}
-                          placeholder="dd/mm/yyyy"
-                          className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 px-4 text-white text-xs md:text-sm outline-none focus:border-primary/50 transition-all"
-                        />
+                         <div className="relative group/field">
+                           <div className="absolute left-0 inset-y-0 pl-4 flex items-center pointer-events-none z-10">
+                              <Calendar className="w-4 h-4 text-primary/40 group-focus-within/field:text-primary transition-colors duration-300" />
+                           </div>
+                           <input 
+                             required
+                             type="date"
+                             value={taskData.deadline}
+                             onChange={(e) => setTaskData({...taskData, deadline: e.target.value})}
+                             className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 pl-12 pr-4 text-white text-xs md:text-sm outline-none focus:border-primary/50 transition-all [color-scheme:dark] appearance-none"
+                           />
+                         </div>
                      </div>
                     <div className="space-y-1.5">
                        <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Priority</label>
