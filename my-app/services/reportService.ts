@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { getCookie } from 'cookies-next';
 
-// Since this is a different domain, we create a specialized axios instance or use direct calls
-const REPORT_API_URL = 'https://4qfrcj97vl.execute-api.ap-south-1.amazonaws.com/api/admin/reports';
+// Use environment variable for the reports API URL
+const REPORT_API_URL = process.env.NEXT_PUBLIC_REPORTS_API_URL
 
 export const reportService = {
   getReports: async () => {
