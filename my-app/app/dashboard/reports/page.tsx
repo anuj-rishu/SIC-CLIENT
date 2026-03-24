@@ -14,12 +14,13 @@ import {
   DollarSign,
   Clock,
   Image as ImageIcon,
-  ShoppingBag
+  ShoppingBag,
+  MapPin
 } from 'lucide-react';
 import { reportService } from '@/services';
 import toast from 'react-hot-toast';
 
-interface SellerInfo {
+interface PersonInfo {
   userId?: string;
   name?: string;
   phone?: string;
@@ -41,7 +42,10 @@ interface TargetDetails {
   howOld?: string;
   status?: string;
   photos?: string[];
-  seller?: SellerInfo;
+  seller?: PersonInfo;
+  // Lost & Found fields
+  location?: string;
+  reporter?: PersonInfo;
   createdAt?: string;
 }
 
@@ -97,7 +101,9 @@ export default function ReportsPage() {
     r.reason.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.targetDetails?.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.targetDetails?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.targetDetails?.seller?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    r.targetDetails?.seller?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.targetDetails?.reporter?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.targetDetails?.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -139,6 +145,7 @@ export default function ReportsPage() {
           {filteredReports.map((report) => {
             const d = report.targetDetails;
             const isMarketplace = report.targetType === 'marketplace';
+            const isLostItem = report.targetType === 'lostItem';
 
             return (
               <div
@@ -197,7 +204,84 @@ export default function ReportsPage() {
                         )}
                       </div>
 
-                      {isMarketplace ? (
+                      {isLostItem ? (
+                        /* Lost & Found Details */
+                        <div className="space-y-3">
+                          {/* Photo */}
+                          {d.photos && d.photos.length > 0 && (
+                            <div className="relative w-full h-36 rounded-xl overflow-hidden border border-white/5 bg-white/5">
+                              <img
+                                src={d.photos[0]}
+                                alt="Lost item photo"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                              {d.photos.length > 1 && (
+                                <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded-lg text-[9px] font-black text-white/60 flex items-center gap-1">
+                                  <ImageIcon className="w-3 h-3" />
+                                  +{d.photos.length - 1} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-0.5">
+                              <p className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest flex items-center gap-1">
+                                <ShoppingBag className="w-2.5 h-2.5" /> Item
+                              </p>
+                              <p className="text-xs font-bold text-white/80 truncate">{d.itemName || '—'}</p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest flex items-center gap-1">
+                                <Package className="w-2.5 h-2.5" /> Status
+                              </p>
+                              <span className={`text-[9px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-lg ${
+                                d.status === 'found' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              }`}>
+                                {d.status || 'lost'}
+                              </span>
+                            </div>
+                            {d.location && (
+                              <div className="col-span-2 space-y-0.5">
+                                <p className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest flex items-center gap-1">
+                                  <MapPin className="w-2.5 h-2.5" /> Location
+                                </p>
+                                <p className="text-xs font-bold text-white/70">{d.location}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {d.description && (
+                            <div className="pt-2 border-t border-primary/10">
+                              <p className="text-[10px] text-stone-400/70 italic leading-relaxed line-clamp-2">{d.description}</p>
+                            </div>
+                          )}
+
+                          {/* Reporter (person who lost the item) */}
+                          {d.reporter && (
+                            <div className="pt-2 border-t border-primary/10 space-y-1">
+                              <p className="text-[8px] font-black text-primary/50 uppercase tracking-widest">Item Owner</p>
+                              <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-1.5">
+                                  <User className="w-3 h-3 text-primary/40" />
+                                  <span className="text-xs font-bold text-white/70">{d.reporter.name || '—'}</span>
+                                </div>
+                                {d.reporter.phone && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Phone className="w-3 h-3 text-primary/40" />
+                                    <span className="text-xs font-bold text-white/50">{d.reporter.phone}</span>
+                                  </div>
+                                )}
+                                {d.reporter.userId && (
+                                  <span className="text-[9px] text-muted-foreground/30 font-bold uppercase">{d.reporter.userId}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : isMarketplace ? (
                         /* Marketplace Details */
                         <div className="space-y-3">
                           {/* Photo */}
