@@ -7,3 +7,4 @@ export * from './taskService';
 export * from './roomieConfigService';
 export * from './momService';
 export * from './meetingService';
+export * from './reportService';

@@ -14,7 +14,8 @@ import {
   CalendarDays,
   ListTodo,
   Globe,
-  FileText
+  FileText,
+  Flag
 } from 'lucide-react';
 import { authService } from '@/services';
 import { deleteCookie } from 'cookies-next';
@@ -27,6 +28,7 @@ const menuItems = [
   { name: 'Tasks', icon: ListTodo, path: '/dashboard/tasks' },
   { name: 'Meetings', icon: FileText, path: '/dashboard/meetings' },
   { name: 'Website Control', icon: Globe, path: '/dashboard/website-control' },
+  { name: 'SRM Verse Report', icon: Flag, path: '/dashboard/reports' },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {

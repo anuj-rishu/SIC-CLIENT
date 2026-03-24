@@ -33,6 +33,12 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
         desc: `Monitor tasks for ${target}` 
       };
     }
+    if (pathname === '/dashboard/website-control') {
+      return { title: 'Website Control', desc: 'Manage landing page and resources' };
+    }
+    if (pathname === '/dashboard/reports') {
+      return { title: 'SRM Verse Report', desc: 'Monitor and manage platform reports' };
+    }
     return { title: 'Overview', desc: 'Monitoring SIC PORTAL status and activity' };
   };
 
