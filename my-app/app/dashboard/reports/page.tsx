@@ -89,40 +89,22 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Header Stats / Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/[0.02] border border-white/5 p-6 rounded-[2.5rem] backdrop-blur-3xl shadow-2xl shadow-black/20">
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 rounded-[2rem] bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 shadow-xl shadow-rose-500/5 transition-transform hover:scale-105 duration-500">
-            <AlertOctagon className="w-8 h-8" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-white tracking-tight uppercase">Platform Integrity</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
-              <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">{filteredReports.length} Reports Logged</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-           <button 
-             onClick={() => fetchReports(true)}
-             disabled={refreshing}
-             className="px-6 py-4 bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 rounded-2xl transition-all active:scale-95 group"
-           >
-             <RefreshCw className={`w-4 h-4 text-primary group-hover:rotate-180 transition-transform duration-700 ${refreshing ? 'animate-spin' : ''}`} />
-           </button>
-           <div className="relative group flex-1 md:w-80">
+      {/* Header Controls */}
+      <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-3xl shadow-xl">
+           <div className="relative group flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors duration-300" />
               <input 
                 type="text" 
-                placeholder="Search by ID, User, or Content..."
+                placeholder="Search reports by ID, reason, or user details..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-6 text-white text-sm outline-none focus:border-primary/30 focus:bg-white/[0.05] transition-all duration-300 shadow-inner"
+                className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-3.5 pl-12 pr-6 text-white text-sm outline-none focus:border-primary/30 focus:bg-white/[0.05] transition-all duration-300"
               />
            </div>
-        </div>
+           <div className="hidden md:flex items-center gap-2 px-4 border-l border-white/5 ml-2">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest">{filteredReports.length} Reports Found</p>
+           </div>
       </div>
 
       {loading ? (
