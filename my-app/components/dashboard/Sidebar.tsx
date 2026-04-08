@@ -15,7 +15,8 @@ import {
   ListTodo,
   Globe,
   FileText,
-  Flag
+  Flag,
+  CheckCircle2
 } from 'lucide-react';
 import { authService } from '@/services';
 import { deleteCookie } from 'cookies-next';
@@ -29,6 +30,7 @@ const menuItems = [
   { name: 'Meetings', icon: FileText, path: '/dashboard/meetings' },
   { name: 'Website Control', icon: Globe, path: '/dashboard/website-control' },
   { name: 'SRM Verse Report', icon: Flag, path: '/dashboard/reports' },
+  { name: 'Club Approval', icon: CheckCircle2, path: '/dashboard/clubs' },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {

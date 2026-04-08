@@ -39,6 +39,9 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     if (pathname === '/dashboard/reports') {
       return { title: 'SRM Verse Report', desc: 'Monitor and manage platform reports' };
     }
+    if (pathname === '/dashboard/clubs') {
+      return { title: 'Club Approval', desc: 'Review and approve platform clubs' };
+    }
     return { title: 'Overview', desc: 'Monitoring SIC PORTAL status and activity' };
   };
 

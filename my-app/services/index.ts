@@ -8,3 +8,4 @@ export * from './roomieConfigService';
 export * from './momService';
 export * from './meetingService';
 export * from './reportService';
+export * from './clubService';

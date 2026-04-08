@@ -47,7 +47,8 @@ export default function InterviewsPage() {
     dailyStartTime: "10:00",
     dailyEndTime: "18:00",
     duration: 30,
-    panels: 1
+    panels: 1,
+    domain: "web dev"
   });
 
   // Evaluation Form State
@@ -66,6 +67,9 @@ export default function InterviewsPage() {
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+
+  const domains = ["web dev", "app dev", "creatives", "corporate", "aiml", "cloud"];
+  const [selectedWhitelistDomain, setSelectedWhitelistDomain] = useState("web dev");
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -168,6 +172,7 @@ export default function InterviewsPage() {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("domain", selectedWhitelistDomain);
 
     setUploading(true);
     try {
@@ -265,7 +270,8 @@ export default function InterviewsPage() {
       dailyStartTime: schedule.dailyStartTime,
       dailyEndTime: schedule.dailyEndTime,
       duration: schedule.duration,
-      panels: schedule.panels
+      panels: schedule.panels,
+      domain: schedule.domain
     });
     setEditId(schedule._id);
     setIsEditing(true);
@@ -350,7 +356,8 @@ export default function InterviewsPage() {
                 dailyStartTime: "10:00",
                 dailyEndTime: "18:00",
                 duration: 30,
-                panels: 1
+                panels: 1,
+                domain: "web dev"
               });
               setShowScheduleModal(true);
             }}
@@ -359,18 +366,29 @@ export default function InterviewsPage() {
             <Plus className="w-4 h-4" /> Create Schedule
           </button>
         ) : (
-          <div className="relative group">
-            <input 
-              type="file" 
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              disabled={uploading}
-            />
-            <button className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 px-8 rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-[10px] uppercase tracking-widest">
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              Upload Whitelist (CSV)
-            </button>
+          <div className="flex items-center gap-3">
+            <select
+              value={selectedWhitelistDomain}
+              onChange={(e) => setSelectedWhitelistDomain(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
+            >
+              {domains.map(d => (
+                <option key={d} value={d} className="bg-slate-900">{d}</option>
+              ))}
+            </select>
+            <div className="relative group">
+              <input 
+                type="file" 
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                disabled={uploading}
+              />
+              <button className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 px-8 rounded-2xl transition-all shadow-xl shadow-emerald-500/20 active:scale-95 text-[10px] uppercase tracking-widest">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                Upload Whitelist (CSV)
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -452,7 +470,14 @@ export default function InterviewsPage() {
                         <User className="w-5 h-5 md:w-7 md:h-7 text-primary/60" />
                       </div>
                       <div className="min-w-0">
-                        <h4 className="text-sm md:text-lg font-bold text-white mb-0.5 truncate">{booking.user?.name}</h4>
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h4 className="text-sm md:text-lg font-bold text-white truncate">{booking.user?.name}</h4>
+                          {booking.slot?.scheduleId?.domain && (
+                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-primary/60">
+                              {booking.slot.scheduleId.domain}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex flex-wrap items-center gap-2 md:gap-3 text-[10px] md:text-xs text-muted-foreground/40">
                           <span className="flex items-center gap-1.5 truncate"><Mail className="w-3 h-3 shrink-0" /> {booking.user?.email}</span>
                           <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full"></span>
@@ -564,6 +589,11 @@ export default function InterviewsPage() {
                            <span className="text-white font-bold text-sm md:text-base">{new Date(s.endDate).toLocaleDateString()}</span>
                         </div>
                         <div className="flex flex-wrap gap-2 md:gap-4 text-[9px] md:text-xs text-muted-foreground/40 uppercase font-black tracking-widest">
+                           {s.domain && (
+                             <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                               {s.domain}
+                             </span>
+                           )}
                            <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {s.dailyStartTime} - {s.dailyEndTime}</span>
                            <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full my-auto"></span>
                            <span className="flex items-center gap-1.5"><LayoutGrid className="w-3 h-3" /> {s.panels} Panels</span>
@@ -644,7 +674,10 @@ export default function InterviewsPage() {
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
                       </div>
-                      <p className="text-sm font-medium text-white/70 truncate">{item.email}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white/70 truncate">{item.email}</p>
+                        <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-widest truncate">{item.domain}</p>
+                      </div>
                     </div>
                     <button 
                       onClick={() => handleRemoveEmail(item._id)}
@@ -694,21 +727,21 @@ export default function InterviewsPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Cycle Start Date</label>
                   <input 
+                    type="date"
                     required
                     value={scheduleData.startDate}
                     onChange={(e) => setScheduleData({ ...scheduleData, startDate: e.target.value })}
-                    placeholder="dd/mm/yyyy"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all [color-scheme:dark]"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Cycle End Date</label>
                   <input 
+                    type="date"
                     required
                     value={scheduleData.endDate}
                     onChange={(e) => setScheduleData({ ...scheduleData, endDate: e.target.value })}
-                    placeholder="dd/mm/yyyy"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -717,21 +750,21 @@ export default function InterviewsPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Daily Start Time</label>
                   <input 
+                    type="time"
                     required
                     value={scheduleData.dailyStartTime}
                     onChange={(e) => setScheduleData({...scheduleData, dailyStartTime: e.target.value})}
-                    placeholder="hh/mm"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all [color-scheme:dark]"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Daily End Time</label>
                   <input 
+                    type="time"
                     required
                     value={scheduleData.dailyEndTime}
                     onChange={(e) => setScheduleData({...scheduleData, dailyEndTime: e.target.value})}
-                    placeholder="hh/mm"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -757,6 +790,20 @@ export default function InterviewsPage() {
                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-1">Interview Domain</label>
+                <select
+                  required
+                  value={scheduleData.domain}
+                  onChange={(e) => setScheduleData({ ...scheduleData, domain: e.target.value })}
+                  className="w-full bg-[#1a1c23] border border-white/10 rounded-2xl py-4 px-6 text-white outline-none focus:border-primary transition-all appearance-none cursor-pointer"
+                >
+                  {domains.map(d => (
+                    <option key={d} value={d}>{d.toUpperCase()}</option>
+                  ))}
+                </select>
               </div>
 
               <button 
