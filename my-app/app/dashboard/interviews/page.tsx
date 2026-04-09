@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   Calendar, 
   Clock, 
@@ -60,6 +60,8 @@ export default function InterviewsPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState("All");
+  const [domainFilter, setDomainFilter] = useState("All");
 
   const [activeTab, setActiveTab] = useState("Interviews");
   const [whitelist, setWhitelist] = useState<any[]>([]);
@@ -299,15 +301,36 @@ export default function InterviewsPage() {
 
 
 
-  const filteredBookings = bookings.filter(b => {
-    const matchesSearch = 
-      b.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All" || b.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const availableDates = useMemo(() => {
+    const dates = bookings
+      .map(b => b.slot?.date?.split('T')[0])
+      .filter(Boolean);
+    return ["All", ...Array.from(new Set(dates))].sort();
+  }, [bookings]);
+
+  const filteredBookings = useMemo(() => {
+    let result = bookings.filter(b => {
+      const matchesSearch = 
+        b.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        b.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "All" || b.status === statusFilter;
+      
+      const bDate = b.slot?.date?.split('T')[0];
+      const matchesDate = dateFilter === "All" || bDate === dateFilter;
+      
+      const bDomain = b.slot?.scheduleId?.domain;
+      const matchesDomain = domainFilter === "All" || bDomain === domainFilter;
+      
+      return matchesSearch && matchesStatus && matchesDate && matchesDomain;
+    });
+
+    return result.sort((a, b) => {
+      const timeA = a.slot?.startTime || "00:00";
+      const timeB = b.slot?.startTime || "00:00";
+      return timeA.localeCompare(timeB);
+    });
+  }, [bookings, searchTerm, statusFilter, dateFilter, domainFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -453,6 +476,30 @@ export default function InterviewsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 md:py-3 pl-11 pr-4 text-xs md:text-sm text-white focus:border-primary/50 transition-all outline-none placeholder:text-muted-foreground/20"
               />
+            </div>
+
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="flex-1 lg:flex-none bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 md:py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
+              >
+                <option value="All" className="bg-slate-900">All Dates</option>
+                {Array.isArray(availableDates) && availableDates.map(d => d !== "All" && (
+                  <option key={d} value={d} className="bg-slate-900">{new Date(d).toLocaleDateString()}</option>
+                ))}
+              </select>
+
+              <select
+                value={domainFilter}
+                onChange={(e) => setDomainFilter(e.target.value)}
+                className="flex-1 lg:flex-none bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 md:py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
+              >
+                <option value="All" className="bg-slate-900">All Domains</option>
+                {domains.map(d => (
+                  <option key={d} value={d} className="bg-slate-900 uppercase">{d}</option>
+                ))}
+              </select>
             </div>
           </div>
 
