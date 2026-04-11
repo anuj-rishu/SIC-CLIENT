@@ -8,4 +8,6 @@ export const adminService = {
   getAllAllowedEmails: () => apiClient.get('/admin-tasks/allowed-emails'),
   removeAllowedEmail: (id: string) => apiClient.delete(`/admin-tasks/allowed-emails/${id}`),
   removeAllAllowedEmails: () => apiClient.delete('/admin-tasks/allowed-emails'),
+  exportAllowedStudents: (ids: string[]) => 
+    apiClient.post('/admin-tasks/export-allowed-students', { ids }, { responseType: 'blob' }),
 };

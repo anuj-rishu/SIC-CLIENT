@@ -13,6 +13,8 @@ export const interviewService = {
     apiClient.put(`/interview/admin/schedules/${scheduleId}`, data),
   deleteSchedule: (scheduleId: string) => 
     apiClient.delete(`/interview/admin/schedules/${scheduleId}`),
+  exportBookings: (ids: string[]) => 
+    apiClient.post('/interview/admin/bookings/export', { ids }, { responseType: 'blob' }),
 
 
   // Student/General routes

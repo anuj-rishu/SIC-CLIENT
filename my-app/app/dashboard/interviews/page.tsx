@@ -26,7 +26,9 @@ import {
   CalendarDays,
   LayoutGrid,
   Settings2,
-  Timer
+  Timer,
+  ChevronDown,
+  Globe
 } from "lucide-react";
 import { interviewService } from "@/services/interviewService";
 import { adminService } from "@/services/adminService";
@@ -65,6 +67,8 @@ export default function InterviewsPage() {
 
   const [activeTab, setActiveTab] = useState("Interviews");
   const [whitelist, setWhitelist] = useState<any[]>([]);
+  const [whitelistSearchTerm, setWhitelistSearchTerm] = useState("");
+  const [whitelistDomainFilter, setWhitelistDomainFilter] = useState("All");
   const [uploading, setUploading] = useState(false);
   const [schedules, setSchedules] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -72,6 +76,8 @@ export default function InterviewsPage() {
 
   const domains = ["web dev", "app dev", "creatives", "corporate", "aiml", "cloud"];
   const [selectedWhitelistDomain, setSelectedWhitelistDomain] = useState("web dev");
+  const [selectedAllowedStudents, setSelectedAllowedStudents] = useState<string[]>([]);
+  const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -231,6 +237,88 @@ export default function InterviewsPage() {
     });
   };
 
+  const filteredWhitelist = useMemo(() => {
+    return whitelist.filter(item => {
+      const matchesSearch = item.email?.toLowerCase().includes(whitelistSearchTerm.toLowerCase());
+      const matchesDomain = whitelistDomainFilter === "All" || item.domain === whitelistDomainFilter;
+      return matchesSearch && matchesDomain;
+    });
+  }, [whitelist, whitelistSearchTerm, whitelistDomainFilter]);
+
+  const handleToggleSelectStudent = (id: string) => {
+    setSelectedAllowedStudents(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllStudents = () => {
+    if (selectedAllowedStudents.length === filteredWhitelist.length && filteredWhitelist.length > 0) {
+      setSelectedAllowedStudents([]);
+    } else {
+      setSelectedAllowedStudents(filteredWhitelist.map(s => s._id));
+    }
+  };
+
+  const handleExportSelected = async () => {
+    if (selectedAllowedStudents.length === 0) {
+      toast.error("Please select students to export");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const response = await adminService.exportAllowedStudents(selectedAllowedStudents);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `whitelisted_students_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Export successful!");
+    } catch (err: any) {
+      toast.error("Failed to export students");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleSelectBooking = (id: string) => {
+    setSelectedBookings(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllBookings = () => {
+    if (selectedBookings.length === filteredBookings.length) {
+      setSelectedBookings([]);
+    } else {
+      setSelectedBookings(filteredBookings.map(b => b._id));
+    }
+  };
+
+  const handleExportBookings = async () => {
+    if (selectedBookings.length === 0) {
+      toast.error("Please select interviews to export");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const response = await interviewService.exportBookings(selectedBookings);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `interview_bookings_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("Export successful!");
+    } catch (err: any) {
+      toast.error("Failed to export interviews");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const fetchSchedules = async () => {
     try {
       setLoading(true);
@@ -314,7 +402,11 @@ export default function InterviewsPage() {
         b.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = statusFilter === "All" || b.status === statusFilter;
+      const matchesStatus = 
+        statusFilter === "All" || 
+        b.status === statusFilter || 
+        (statusFilter === "SELECTED" && b.evaluation?.result === "SELECTED") ||
+        (statusFilter === "REJECTED" && b.evaluation?.result === "REJECTED");
       
       const bDate = b.slot?.date?.split('T')[0];
       const matchesDate = dateFilter === "All" || bDate === dateFilter;
@@ -452,56 +544,93 @@ export default function InterviewsPage() {
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col lg:flex-row items-center gap-3 md:gap-4">
-            <div className="flex bg-white/5 p-1 rounded-xl w-full lg:w-auto overflow-x-auto no-scrollbar">
-              {["All", "BOOKED", "COMPLETED", "CANCELLED"].map(s => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`flex-1 lg:flex-none px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                    statusFilter === s ? "bg-primary text-white shadow-lg" : "text-muted-foreground/60 hover:text-white"
-                  }`}
+          <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-col xl:flex-row items-stretch xl:items-center gap-4 md:gap-6">
+            
+            {/* Left/Main Section: Search & Status */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
+              <div className="md:col-span-8 relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
+                <input 
+                  type="text"
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 md:py-4 pl-12 pr-4 text-sm text-white focus:border-primary/50 transition-all outline-none placeholder:text-muted-foreground/20 hover:bg-white/[0.08]"
+                />
+              </div>
+
+              <div className="md:col-span-4 relative group">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary/40" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-10 pr-10 py-3.5 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer hover:bg-white/[0.08]"
                 >
-                  {s}
-                </button>
-              ))}
+                  <option value="All" className="bg-slate-900 text-xs">All Status</option>
+                  <option value="BOOKED" className="bg-slate-900 text-xs">Booked</option>
+                  <option value="COMPLETED" className="bg-slate-900 text-xs">Completed</option>
+                  <option value="CANCELLED" className="bg-slate-900 text-xs">Cancelled</option>
+                  <option value="SELECTED" className="bg-slate-900 text-xs">Selected</option>
+                  <option value="REJECTED" className="bg-slate-900 text-xs">Rejected</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 pointer-events-none" />
+              </div>
             </div>
 
-            <div className="flex-1 w-full relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
-              <input 
-                type="text"
-                placeholder="Search student..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 md:py-3 pl-11 pr-4 text-xs md:text-sm text-white focus:border-primary/50 transition-all outline-none placeholder:text-muted-foreground/20"
-              />
-            </div>
+            {/* Right Section: Refiners & Actions */}
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+                <div className="relative group">
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full sm:w-36 bg-white/5 border border-white/10 rounded-2xl pl-4 pr-10 py-3.5 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer hover:bg-white/[0.08]"
+                  >
+                    <option value="All" className="bg-slate-900 text-xs">Dates</option>
+                    {Array.isArray(availableDates) && availableDates.map(d => d !== "All" && (
+                      <option key={d} value={d} className="bg-slate-900 text-xs">{new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</option>
+                    ))}
+                  </select>
+                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                </div>
 
-            <div className="flex items-center gap-2 w-full lg:w-auto">
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="flex-1 lg:flex-none bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 md:py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
-              >
-                <option value="All" className="bg-slate-900">All Dates</option>
-                {Array.isArray(availableDates) && availableDates.map(d => d !== "All" && (
-                  <option key={d} value={d} className="bg-slate-900">{new Date(d).toLocaleDateString()}</option>
-                ))}
-              </select>
+                <div className="relative group">
+                  <select
+                    value={domainFilter}
+                    onChange={(e) => setDomainFilter(e.target.value)}
+                    className="w-full sm:w-36 bg-white/5 border border-white/10 rounded-2xl pl-4 pr-10 py-3.5 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer hover:bg-white/[0.08]"
+                  >
+                    <option value="All" className="bg-slate-900 text-xs">Domain</option>
+                    {domains.map(d => (
+                      <option key={d} value={d} className="bg-slate-900 uppercase text-xs">{d}</option>
+                    ))}
+                  </select>
+                  <Globe className="absolute right-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                </div>
+              </div>
 
-              <select
-                value={domainFilter}
-                onChange={(e) => setDomainFilter(e.target.value)}
-                className="flex-1 lg:flex-none bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 md:py-3 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
+              <button
+                onClick={handleExportBookings}
+                disabled={selectedBookings.length === 0 || actionLoading}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary/90 px-8 py-3.5 md:py-4 rounded-2xl transition-all text-xs font-black uppercase tracking-widest disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed shadow-xl shadow-primary/20 whitespace-nowrap active:scale-95"
               >
-                <option value="All" className="bg-slate-900">All Domains</option>
-                {domains.map(d => (
-                  <option key={d} value={d} className="bg-slate-900 uppercase">{d}</option>
-                ))}
-              </select>
+                <FileSpreadsheet className="w-4 h-4" />
+                Export {selectedBookings.length > 0 ? `(${selectedBookings.length})` : ""}
+              </button>
             </div>
           </div>
+
+          {filteredBookings.length > 0 && (
+            <div className="flex items-center gap-3 mb-4 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+              <input 
+                type="checkbox"
+                checked={selectedBookings.length === filteredBookings.length && filteredBookings.length > 0}
+                onChange={handleSelectAllBookings}
+                className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/50 cursor-pointer"
+              />
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Select All</span>
+            </div>
+          )}
 
           {/* Bookings List */}
           <div className="grid grid-cols-1 gap-4">
@@ -509,60 +638,69 @@ export default function InterviewsPage() {
               filteredBookings.map((booking) => (
                 <div 
                   key={booking._id} 
-                  className="bg-card/20 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-3xl p-4 md:p-6 hover:bg-card/30 transition-all group relative overflow-hidden"
+                  className={`backdrop-blur-md border rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all group relative overflow-hidden ${
+                    selectedBookings.includes(booking._id) ? 'border-primary/40 bg-primary/5' : 'bg-card/20 border-white/5 hover:bg-card/30'
+                  }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-6">
-                    <div className="flex items-center gap-4 md:gap-5">
-                      <div className="w-11 h-11 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                        <User className="w-5 h-5 md:w-7 md:h-7 text-primary/60" />
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="flex items-center gap-4 md:gap-6">
+                      <div className="relative shrink-0 flex items-center">
+                        <input 
+                          type="checkbox"
+                          checked={selectedBookings.includes(booking._id)}
+                          onChange={() => handleToggleSelectBooking(booking._id)}
+                          className="w-5 h-5 md:w-6 md:h-6 rounded-lg md:rounded-xl border-white/10 bg-white/5 text-primary focus:ring-primary/40 cursor-pointer transition-all shrink-0"
+                        />
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h4 className="text-sm md:text-lg font-bold text-white truncate">{booking.user?.name}</h4>
-                          {booking.slot?.scheduleId?.domain && (
-                            <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest text-primary/60">
-                              {booking.slot.scheduleId.domain}
-                            </span>
-                          )}
+                      <div className="flex items-center gap-3 md:gap-5 min-w-0">
+                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.25rem] bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                          <User className="w-6 h-6 md:w-8 md:h-8 text-primary/60" />
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3 text-[10px] md:text-xs text-muted-foreground/40">
-                          <span className="flex items-center gap-1.5 truncate"><Mail className="w-3 h-3 shrink-0" /> {booking.user?.email}</span>
-                          <span className="hidden md:block w-1 h-1 bg-white/10 rounded-full"></span>
-                          <span className={`px-2 py-0.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-tighter border ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className="text-base md:text-xl font-bold text-white tracking-tight truncate max-w-[150px] sm:max-w-none">{booking.user?.name}</h4>
+                            {booking.slot?.scheduleId?.domain && (
+                              <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[8px] md:text-[10px] uppercase font-black tracking-widest whitespace-nowrap">
+                                {booking.slot.scheduleId.domain}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] md:text-xs">
+                             <Mail className="w-3 h-3 text-muted-foreground/30" />
+                             <span className="text-muted-foreground/40 font-bold truncate max-w-[180px] sm:max-w-none">{booking.user?.email}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-8 lg:justify-end">
-                      <div className="space-y-1">
-                        <p className="text-[8px] md:text-[10px] text-muted-foreground/30 uppercase font-black tracking-widest">Time & Slot</p>
-                        <div className="flex items-center gap-2 text-white/80 font-bold text-[10px] md:text-xs">
-                          <Calendar className="w-3.5 h-3.5 text-primary/60" />
-                          {booking.slot?.date ? new Date(booking.slot.date).toLocaleDateString() : "N/A"}
-                          <span className="opacity-20 hidden md:block">|</span>
-                          <div className="flex items-center gap-1.5">
-                             <Clock className="w-3.5 h-3.5 text-primary/60" />
-                             {booking.slot?.startTime} - {booking.slot?.endTime}
+                    <div className="flex flex-col sm:flex-row lg:items-center gap-4 sm:gap-8 ml-9 sm:ml-0 border-t border-white/5 sm:border-none pt-4 sm:pt-0">
+                      <div className="grid grid-cols-2 sm:flex sm:items-center gap-6 sm:gap-10">
+                        <div className="space-y-1">
+                          <p className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Schedule</p>
+                          <div className="flex items-center gap-2 text-white/80 font-bold whitespace-nowrap">
+                             <Calendar className="w-3.5 h-3.5 text-primary/40" />
+                             <span className="text-xs md:text-sm">{booking.slot?.date ? new Date(booking.slot.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Interval</p>
+                          <div className="flex items-center gap-2 text-white/80 font-bold whitespace-nowrap">
+                             <Clock className="w-3.5 h-3.5 text-primary/40" />
+                             <span className="text-xs md:text-sm">{booking.slot?.startTime} - {booking.slot?.endTime}</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="hidden md:block space-y-1">
-                        <p className="text-[10px] text-muted-foreground/30 uppercase font-bold tracking-widest">Panel</p>
-                        <p className="text-white/80 font-bold text-sm">P{booking.slot?.panel || "?"}</p>
-                      </div>
-
-                      <div className="flex items-center gap-2 md:gap-3">
+                      <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
                         {booking.meetingLink && (
                           <a 
                             href={booking.meetingLink} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="p-2.5 md:p-3 rounded-lg md:rounded-xl bg-white/5 border border-white/10 text-muted-foreground hover:text-white hover:border-primary/50 transition-all"
+                            className="p-3 bg-white/5 border border-white/10 rounded-xl text-primary hover:text-white hover:bg-primary transition-all shadow-lg active:scale-95"
+                            title="Join Meeting"
                           >
-                            <ExternalLink className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            <ExternalLink className="w-4 h-4" />
                           </a>
                         )}
                         
@@ -572,7 +710,7 @@ export default function InterviewsPage() {
                               setSelectedBooking(booking);
                               setShowEvaluateModal(true);
                             }}
-                            className="px-4 md:px-6 py-2.5 md:py-3 bg-white/5 border border-white/10 rounded-lg md:rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest text-white hover:bg-primary hover:border-primary transition-all active:scale-[0.98]"
+                            className="flex-1 sm:flex-none px-6 py-3 bg-primary text-white border border-primary/20 rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20"
                           >
                             Evaluate
                           </button>
@@ -580,22 +718,21 @@ export default function InterviewsPage() {
 
                         <button 
                           onClick={() => handleDeleteBooking(booking._id)}
-                          className="p-2.5 md:p-3 rounded-lg md:rounded-xl bg-white/5 border border-white/10 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500 transition-all"
-                          title="Delete Booking"
+                          className="p-3 rounded-xl bg-white/5 border border-white/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95"
+                          title="Delete"
                         >
-                          <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
 
                         {booking.status === "COMPLETED" && booking.evaluation && (
-                          <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg md:rounded-xl">
-                            <div className="hidden sm:flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`w-2.5 h-2.5 md:w-3 md:h-3 ${i < (booking.evaluation.rating || 0) ? "text-amber-400 fill-amber-400" : "text-white/10"}`} />
-                              ))}
-                            </div>
-                            <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${booking.evaluation.result === "SELECTED" ? "text-emerald-400" : "text-rose-400"}`}>
-                              {booking.evaluation.result}
-                            </span>
+                          <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                             <span className={`text-[10px] font-black uppercase tracking-widest ${booking.evaluation.result === "SELECTED" ? "text-emerald-400" : "text-rose-400"}`}>
+                               {booking.evaluation.result}
+                             </span>
+                          </div>
+                        ) || (
+                          <div className={`px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-white/5 ${getStatusColor(booking.status)}`}>
+                            {booking.status}
                           </div>
                         )}
                       </div>
@@ -690,34 +827,97 @@ export default function InterviewsPage() {
       ) : (
         <div className="space-y-6">
           {/* Whitelist Content */}
-          <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8">
-            <div className="flex items-center justify-between mb-6 md:mb-8">
+          <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-12">
               <div>
-                <h3 className="text-lg md:text-xl font-bold text-white uppercase tracking-tighter">Access Whitelist</h3>
-                <p className="text-[10px] md:text-sm text-muted-foreground/40 uppercase font-bold tracking-widest mt-1">Authorized Emails</p>
+                <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-tighter">Access Whitelist</h3>
+                <p className="text-[10px] md:text-sm text-muted-foreground/40 uppercase font-black tracking-widest mt-1.5">Authorized Student Directory</p>
               </div>
-              <div className="flex items-center gap-4">
-                {whitelist.length > 0 && (
-                  <button
-                    onClick={handleRemoveAllEmails}
-                    className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-all text-[10px] md:text-xs font-black uppercase tracking-widest"
-                  >
-                    <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
-                    Delete All
-                  </button>
-                )}
-                <div className="px-3 md:px-4 py-1.5 md:py-2 bg-white/5 border border-white/5 rounded-xl">
-                  <span className="text-xs font-bold text-white">{whitelist.length}</span>
-                  <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/40 uppercase tracking-widest ml-2">Total</span>
+              
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 lg:max-w-4xl lg:justify-end">
+                <div className="relative flex-1 group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-focus-within:text-primary transition-colors" />
+                  <input 
+                    type="text"
+                    placeholder="Search by email..."
+                    value={whitelistSearchTerm}
+                    onChange={(e) => setWhitelistSearchTerm(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white focus:border-primary/50 transition-all outline-none placeholder:text-muted-foreground/20 hover:bg-white/[0.08]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-3">
+                  <div className="relative group">
+                    <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/20 group-focus-within:text-primary transition-colors" />
+                    <select
+                      value={whitelistDomainFilter}
+                      onChange={(e) => setWhitelistDomainFilter(e.target.value)}
+                      className="w-full sm:w-44 bg-white/5 border border-white/10 rounded-2xl pl-10 pr-10 py-3.5 text-[10px] md:text-xs font-black uppercase tracking-widest text-white outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer hover:bg-white/[0.08]"
+                    >
+                      <option value="All" className="bg-slate-900">All Domains</option>
+                      {domains.map(d => (
+                        <option key={d} value={d} className="bg-slate-900 uppercase">{d}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 pointer-events-none" />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportSelected}
+                      disabled={selectedAllowedStudents.length === 0 || actionLoading}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white rounded-2xl transition-all text-[10px] md:text-xs font-black uppercase tracking-widest disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed shadow-xl shadow-primary/20 active:scale-95"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      <span className="hidden sm:inline">Export</span> {selectedAllowedStudents.length > 0 ? `(${selectedAllowedStudents.length})` : ""}
+                    </button>
+                    <button
+                      onClick={handleRemoveAllEmails}
+                      className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white rounded-2xl transition-all active:scale-95"
+                      title="Delete All"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3 px-5 py-3 bg-white/5 rounded-2xl border border-white/5">
+                <input 
+                  type="checkbox"
+                  checked={selectedAllowedStudents.length === filteredWhitelist.length && filteredWhitelist.length > 0}
+                  onChange={handleSelectAllStudents}
+                  className="w-5 h-5 md:w-6 md:h-6 rounded-lg md:rounded-xl border-white/10 bg-white/5 text-primary focus:ring-primary/40 cursor-pointer transition-all"
+                />
+                <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                   {selectedAllowedStudents.length > 0 ? `${selectedAllowedStudents.length} Selected` : "Select All Visible"}
+                </span>
+              </div>
+              
+              <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-3">
+                <span className="text-sm font-black text-white">{filteredWhitelist.length}</span>
+                <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">Matched</span>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {whitelist.length > 0 ? (
-                whitelist.map((item) => (
-                  <div key={item._id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex items-center justify-between group hover:border-white/10 transition-all">
+              {filteredWhitelist.length > 0 ? (
+                filteredWhitelist.map((item) => (
+                  <div 
+                    key={item._id} 
+                    className={`bg-white/[0.02] border rounded-2xl p-4 flex items-center justify-between group transition-all ${
+                      selectedAllowedStudents.includes(item._id) ? 'border-primary/40 bg-primary/5' : 'border-white/5 hover:border-white/10'
+                    }`}
+                  >
                     <div className="flex items-center gap-3 overflow-hidden">
+                      <input 
+                        type="checkbox"
+                        checked={selectedAllowedStudents.includes(item._id)}
+                        onChange={() => handleToggleSelectStudent(item._id)}
+                        className="w-4 h-4 rounded border-white/10 bg-white/5 text-primary focus:ring-primary/50 cursor-pointer"
+                      />
                       <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                         <ShieldCheck className="w-4 h-4 text-emerald-500" />
                       </div>
@@ -735,9 +935,9 @@ export default function InterviewsPage() {
                   </div>
                 ))
               ) : (
-                <div className="col-span-full py-20 text-center">
+                <div className="col-span-full py-20 text-center bg-card/10 rounded-3xl border border-dashed border-white/10">
                   <FileSpreadsheet className="w-12 h-12 text-muted-foreground/10 mx-auto mb-4" />
-                  <p className="text-muted-foreground/30 text-sm font-medium">No emails found in whitelist</p>
+                  <p className="text-muted-foreground/30 text-sm font-medium">No students found matching filters</p>
                 </div>
               )}
             </div>
