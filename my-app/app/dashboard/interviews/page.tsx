@@ -658,99 +658,118 @@ export default function InterviewsPage() {
                     selectedBookings.includes(booking._id) ? 'border-primary/40 bg-primary/5' : 'bg-card/20 border-white/5 hover:bg-card/30'
                   }`}
                 >
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div className="flex items-center gap-4 md:gap-6">
-                      <div className="relative shrink-0 flex items-center">
+                  <div className="grid grid-cols-1 xl:grid-cols-12 items-start gap-4 xl:gap-0">
+                    
+                    {/* Zone 1: Identity (Col 5) */}
+                    <div className="xl:col-span-5 flex items-start gap-3 md:gap-4 xl:pr-6 pb-4 xl:pb-0">
+                      <div className="relative shrink-0 mt-2">
                         <input 
                           type="checkbox"
                           checked={selectedBookings.includes(booking._id)}
                           onChange={() => handleToggleSelectBooking(booking._id)}
-                          className="w-5 h-5 md:w-6 md:h-6 rounded-lg md:rounded-xl border-white/10 bg-white/5 text-primary focus:ring-primary/40 cursor-pointer transition-all shrink-0"
+                          className="w-3 h-3 md:w-3.5 md:h-3.5 rounded-sm border-white/10 bg-white/5 text-primary focus:ring-primary/40 cursor-pointer transition-all shrink-0"
                         />
                       </div>
-                      <div className="flex items-center gap-3 md:gap-5 min-w-0">
-                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-[1.25rem] bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                          <User className="w-6 h-6 md:w-8 md:h-8 text-primary/60" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h4 className="text-base md:text-xl font-bold text-white tracking-tight truncate max-w-[150px] sm:max-w-none">{booking.user?.name}</h4>
+                      <div className="flex items-start gap-1 min-w-0">
+                        <div className="min-w-0 pt-0.5">
+                          <div className="mb-1">
+                            <h4 className="text-sm md:text-base font-bold text-white tracking-tight break-words leading-tight">
+                              {booking.user?.name}
+                            </h4>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-[9px] md:text-[10px]">
                             {booking.slot?.scheduleId?.domain && (
-                              <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[8px] md:text-[10px] uppercase font-black tracking-widest whitespace-nowrap">
+                              <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-black uppercase tracking-widest whitespace-nowrap">
                                 {booking.slot.scheduleId.domain}
                               </span>
                             )}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[10px] md:text-xs">
-                             <Mail className="w-3 h-3 text-muted-foreground/30" />
-                             <span className="text-muted-foreground/40 font-bold truncate max-w-[180px] sm:max-w-none">{booking.user?.email}</span>
+                             <div className="flex items-center gap-1.5 min-w-0">
+                               <Mail className="w-2.5 h-2.5 text-muted-foreground/30 shrink-0" />
+                               <span className="text-muted-foreground/40 font-bold break-all truncate">{booking.user?.email}</span>
+                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row lg:items-center gap-4 sm:gap-8 ml-9 sm:ml-0 border-t border-white/5 sm:border-none pt-4 sm:pt-0">
-                      <div className="grid grid-cols-2 sm:flex sm:items-center gap-6 sm:gap-10">
-                        <div className="space-y-1">
-                          <p className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Schedule</p>
-                          <div className="flex items-center gap-2 text-white/80 font-bold whitespace-nowrap">
-                             <Calendar className="w-3.5 h-3.5 text-primary/40" />
-                             <span className="text-xs md:text-sm">{booking.slot?.date ? new Date(booking.slot.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}</span>
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Interval</p>
-                          <div className="flex items-center gap-2 text-white/80 font-bold whitespace-nowrap">
-                             <Clock className="w-3.5 h-3.5 text-primary/40" />
-                             <span className="text-xs md:text-sm">{booking.slot?.startTime} - {booking.slot?.endTime}</span>
-                          </div>
+                    {/* Zone 2: Logistics (Col 3) */}
+                    <div className="xl:col-span-3 flex items-center border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:px-6">
+                      <div className="space-y-1.5 w-full">
+                        <p className="text-[7px] md:text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Interview Logistics</p>
+                        <div className="flex items-center gap-3 text-white/80 font-bold whitespace-nowrap overflow-hidden">
+                           <div className="flex items-center gap-1.5">
+                             <Calendar className="w-3 h-3 text-primary/40 shrink-0" />
+                             <span className="text-[9px] md:text-[10px]">{booking.slot?.date ? new Date(booking.slot.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : "---"}</span>
+                           </div>
+                           <span className="text-white/10 font-thin">|</span>
+                           <div className="flex items-center gap-1.5">
+                              <Clock className="w-3 h-3 text-primary/40 shrink-0" />
+                              <span className="text-[9px] md:text-[10px]">{booking.slot?.startTime} - {booking.slot?.endTime}</span>
+                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex items-center gap-2 sm:gap-4 mt-2 sm:mt-0">
-                        {booking.meetingLink && (
-                          <a 
-                            href={booking.meetingLink} 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="p-3 bg-white/5 border border-white/10 rounded-xl text-primary hover:text-white hover:bg-primary transition-all shadow-lg active:scale-95"
-                            title="Join Meeting"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                        
-                        {(booking.status === "BOOKED" || booking.status === "COMPLETED") && (
-                          <button 
-                            onClick={() => handleOpenEvaluateModal(booking)}
-                            className="flex-1 sm:flex-none px-6 py-3 bg-primary text-white border border-primary/20 rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20"
-                          >
-                            {booking.status === "COMPLETED" ? "Re-evaluate" : "Evaluate"}
-                          </button>
-                        )}
-
-                        <button 
-                          onClick={() => handleDeleteBooking(booking._id)}
-                          className="p-3 rounded-xl bg-white/5 border border-white/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-
-                        {booking.status === "COMPLETED" && booking.evaluation && (
-                          <div className="flex items-center gap-3 px-4 py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
-                             <span className={`text-[10px] font-black uppercase tracking-widest ${booking.evaluation.result === "SELECTED" ? "text-emerald-400" : "text-rose-400"}`}>
+                    {/* Zone 3: Result & Admin (Col 2) */}
+                    <div className="xl:col-span-2 flex items-center border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:px-6">
+                       {booking.status === "COMPLETED" && booking.evaluation ? (
+                         <div className="flex flex-col gap-1">
+                           <p className="text-[7px] md:text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Decision</p>
+                           <div className="inline-flex flex-col items-start gap-0.5">
+                             <span className={`px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-black tracking-widest border uppercase ${
+                               booking.evaluation.result === "SELECTED" 
+                                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                                 : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                             }`}>
                                {booking.evaluation.result}
                              </span>
-                          </div>
-                        )}
-                        
-                        {booking.status !== "COMPLETED" && booking.status !== "BOOKED" && (
-                          <div className={`px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-white/5 ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </div>
-                        )}
-                      </div>
+                             {booking.evaluation.evaluatedBy?.name && (
+                               <span className="text-[6px] md:text-[7px] font-black text-muted-foreground/20 uppercase tracking-[0.1em] ml-0.5">
+                                 By {booking.evaluation.evaluatedBy.name}
+                               </span>
+                             )}
+                           </div>
+                         </div>
+                       ) : (
+                         <div className="space-y-1">
+                           <p className="text-[7px] md:text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Status</p>
+                           <span className={`px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-black tracking-widest border uppercase bg-white/5 border-white/10 ${getStatusColor(booking.status)}`}>
+                             {booking.status}
+                           </span>
+                         </div>
+                       )}
+                    </div>
+
+                    {/* Zone 4: Actions (Col 2) */}
+                    <div className="xl:col-span-2 flex items-center justify-end border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:pl-6 gap-2">
+                      {booking.meetingLink && (
+                        <a 
+                          href={booking.meetingLink} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="p-2 bg-white/5 border border-white/10 rounded-lg text-primary hover:text-white hover:bg-primary transition-all shadow-lg active:scale-95 group/link"
+                          title="Join Meeting"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 group-hover/link:scale-110 transition-transform" />
+                        </a>
+                      )}
+                      
+                      {(booking.status === "BOOKED" || booking.status === "COMPLETED") && (
+                        <button 
+                          onClick={() => handleOpenEvaluateModal(booking)}
+                          className="flex-1 xl:flex-none px-4 py-2 bg-primary text-white border border-primary/20 rounded-[12px] text-[8px] md:text-[9px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-xl shadow-primary/20"
+                        >
+                          {booking.status === "COMPLETED" ? "Re-eval" : "Evaluate"}
+                        </button>
+                      )}
+
+                      <button 
+                        onClick={() => handleDeleteBooking(booking._id)}
+                        className="p-2 rounded-lg bg-white/5 border border-white/10 text-rose-400/40 hover:text-rose-400 hover:bg-rose-400/10 transition-all active:scale-95 group/del"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 group-hover/del:rotate-12 transition-transform" />
+                      </button>
                     </div>
                   </div>
                 </div>
