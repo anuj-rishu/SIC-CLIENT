@@ -124,6 +124,22 @@ export default function InterviewsPage() {
     }
   };
 
+  const handleOpenEvaluateModal = (booking: any) => {
+    setSelectedBooking(booking);
+    if (booking.status === "COMPLETED" && booking.evaluation) {
+      setEvaluationData({
+        result: booking.evaluation.result,
+        rating: booking.evaluation.rating || 5
+      });
+    } else {
+      setEvaluationData({
+        result: "SELECTED",
+        rating: 5
+      });
+    }
+    setShowEvaluateModal(true);
+  };
+
   const handleEvaluate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBooking) return;
@@ -704,15 +720,12 @@ export default function InterviewsPage() {
                           </a>
                         )}
                         
-                        {booking.status === "BOOKED" && (
+                        {(booking.status === "BOOKED" || booking.status === "COMPLETED") && (
                           <button 
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setShowEvaluateModal(true);
-                            }}
+                            onClick={() => handleOpenEvaluateModal(booking)}
                             className="flex-1 sm:flex-none px-6 py-3 bg-primary text-white border border-primary/20 rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-primary/20"
                           >
-                            Evaluate
+                            {booking.status === "COMPLETED" ? "Re-evaluate" : "Evaluate"}
                           </button>
                         )}
 
@@ -730,7 +743,9 @@ export default function InterviewsPage() {
                                {booking.evaluation.result}
                              </span>
                           </div>
-                        ) || (
+                        )}
+                        
+                        {booking.status !== "COMPLETED" && booking.status !== "BOOKED" && (
                           <div className={`px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-white/5 ${getStatusColor(booking.status)}`}>
                             {booking.status}
                           </div>
