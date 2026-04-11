@@ -120,7 +120,7 @@ export default function InterviewsPage() {
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to create schedule");
     } finally {
-      setActionLoading(false);
+      setActionLoading(false)
     }
   };
 
