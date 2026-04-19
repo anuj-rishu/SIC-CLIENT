@@ -42,7 +42,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     if (pathname === '/dashboard/clubs') {
       return { title: 'Club Approval', desc: 'Review and approve platform clubs' };
     }
-    return { title: 'Overview', desc: 'Monitoring SIC PORTAL status and activity' };
+    return { title: 'Overview', desc: 'Monitoring SIC PORTAL status' };
   };
 
   const { title, desc } = getPageInfo();

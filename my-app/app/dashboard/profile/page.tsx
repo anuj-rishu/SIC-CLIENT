@@ -422,26 +422,26 @@ export default function ProfilePage() {
               {profile?.passkeys?.length > 0 ? (
                 <div className="space-y-2">
                   {profile.passkeys.map((pk: any) => (
-                    <div key={pk._id || pk.credentialID} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white/[0.01] border border-white/5 rounded-xl gap-3">
-                       <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                            <Key className="w-3.5 h-3.5 text-emerald-400" />
+                    <div key={pk._id || pk.credentialID} className="flex items-center justify-between p-2.5 bg-white/[0.01] border border-white/5 rounded-xl gap-2">
+                       <div className="flex items-center gap-2.5">
+                         <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                            <Key className="w-3 h-3 text-emerald-400" />
                          </div>
                          <div>
-                           <p className="text-[11px] font-bold text-white uppercase tracking-widest">{pk.label || 'Passkey Device'}</p>
-                           <p className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5 font-bold">Counter: {pk.counter}</p>
+                           <p className="text-[10px] font-bold text-white uppercase tracking-widest leading-tight">{pk.label || 'Device'}</p>
+                           <p className="text-[8px] text-muted-foreground uppercase tracking-wider font-bold opacity-40">Counter: {pk.counter}</p>
                          </div>
                        </div>
-                       <button onClick={() => handleDeletePasskey(pk.credentialID)} className="text-red-400/50 hover:text-red-400 p-2 bg-red-500/5 hover:bg-red-500/10 rounded-lg transition-all self-end sm:self-auto">
-                         <Trash2 className="w-4 h-4" />
+                       <button onClick={() => handleDeletePasskey(pk.credentialID)} className="text-red-400/30 hover:text-red-400 p-1.5 hover:bg-red-500/5 rounded-lg transition-all">
+                         <Trash2 className="w-3.5 h-3.5" />
                        </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center p-6 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
-                   <Fingerprint className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">No passkeys registered</p>
+                <div className="text-center p-4 border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+                   <Fingerprint className="w-6 h-6 text-muted-foreground/20 mx-auto mb-1.5" />
+                   <p className="text-[9px] text-muted-foreground/40 uppercase tracking-widest font-bold">No passkeys registered</p>
                 </div>
               )}
             </div>

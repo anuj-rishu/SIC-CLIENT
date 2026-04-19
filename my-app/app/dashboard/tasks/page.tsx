@@ -64,6 +64,13 @@ export default function TasksPage() {
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [submissionTaskId, setSubmissionTaskId] = useState<string | null>(null);
   const [submissionDescription, setSubmissionDescription] = useState("");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingTaskId, setRatingTaskId] = useState<string | null>(null);
+  const [taskRating, setTaskRating] = useState(5);
+  const [showDescModal, setShowDescModal] = useState(false);
+  const [descTask, setDescTask] = useState<any>(null);
+  const [showSubDescModal, setShowSubDescModal] = useState(false);
+  const [subDescTask, setSubDescTask] = useState<any>(null);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -301,15 +308,26 @@ export default function TasksPage() {
     }
   };
 
-  const handleApprove = async (taskId: string) => {
+  const handleApprove = (taskId: string) => {
+    setRatingTaskId(taskId);
+    setTaskRating(5);
+    setShowRatingModal(true);
+  };
+
+  const confirmApproval = async () => {
+    if (!ratingTaskId) return;
+    setActionLoading(true);
     try {
-      await taskService.approveTask(taskId);
+      await taskService.approveTask(ratingTaskId, taskRating);
       if (activeTab === "Org Tracking") fetchAdminTasks();
       else fetchTeamTasks();
       fetchStats();
-      toast.success("Task approved successfully");
+      toast.success(`Task approved with ${taskRating} stars!`);
+      setShowRatingModal(false);
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to approve task");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -351,6 +369,28 @@ export default function TasksPage() {
       </div>
     );
   }
+
+  // Utility to render text with clickable links
+  const renderTextWithLinks = (text: string) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a 
+            key={i} 
+            href={part} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline font-bold break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-6">
@@ -396,15 +436,15 @@ export default function TasksPage() {
       <div className="space-y-4 md:space-y-6 animate-in slide-in-from-top duration-700 bg-white/[0.02] border border-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] backdrop-blur-3xl">
         {/* Action Row: Tabs & Assign */}
         {(isAssignableRole || isHighLevelAdmin(profile?.domain?.role)) && (
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-2">
-            <div className="flex items-center gap-4">
-              <div className="flex bg-white/5 p-1 rounded-2xl w-full md:w-auto overflow-x-auto no-scrollbar">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/5 pb-3 mb-1">
+            <div className="flex items-center gap-3">
+              <div className="flex bg-white/5 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => { setActiveTab("My Tasks"); setCurrentPage(1); }}
-                  className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
+                  className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-lg md:rounded-xl text-[9px] md:text-xs font-black uppercase tracking-widest transition-all ${
                     activeTab === "My Tasks" 
-                      ? "bg-primary text-white shadow-[0_10px_20px_-5px_rgba(59,130,246,0.3)]" 
-                      : "text-muted-foreground/40 hover:text-white"
+                      ? "bg-primary text-white shadow-lg" 
+                      : "text-muted-foreground/30 hover:text-white"
                   }`}
                 >
                   My Tasks
@@ -413,10 +453,10 @@ export default function TasksPage() {
                 {(profile?.domain?.role === "LEAD" || profile?.domain?.role === "ASSOCIATE") && (
                   <button
                     onClick={() => { setActiveTab("Team Management"); setCurrentPage(1); }}
-                    className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
+                    className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-lg md:rounded-xl text-[9px] md:text-xs font-black uppercase tracking-widest transition-all ${
                       activeTab === "Team Management" 
-                        ? "bg-primary text-white shadow-[0_10px_20px_-5px_rgba(59,130,246,0.3)]" 
-                        : "text-muted-foreground/40 hover:text-white"
+                        ? "bg-primary text-white shadow-lg" 
+                        : "text-muted-foreground/30 hover:text-white"
                     }`}
                   >
                     Team
@@ -426,10 +466,10 @@ export default function TasksPage() {
                 {isHighLevelAdmin(profile?.domain?.role) && (
                   <button
                     onClick={() => { setActiveTab("Org Tracking"); setCurrentPage(1); }}
-                    className={`flex-1 md:flex-none px-4 md:px-8 py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all ${
+                    className={`flex-1 md:flex-none px-4 md:px-8 py-2 md:py-3 rounded-lg md:rounded-xl text-[9px] md:text-xs font-black uppercase tracking-widest transition-all ${
                       activeTab === "Org Tracking" 
-                        ? "bg-primary text-white shadow-[0_10px_20px_-5px_rgba(59,130,246,0.3)]" 
-                        : "text-muted-foreground/40 hover:text-white"
+                        ? "bg-primary text-white shadow-lg" 
+                        : "text-muted-foreground/30 hover:text-white"
                     }`}
                   >
                     Org
@@ -441,40 +481,40 @@ export default function TasksPage() {
             {isAssignableRole && (
               <button 
                 onClick={() => setShowAssignModal(true)}
-                className="group relative flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 hover:bg-primary px-4 md:px-8 py-2.5 md:py-3 rounded-xl md:rounded-2xl transition-all shadow-xl shadow-primary/5"
+                className="group flex items-center justify-center gap-2 bg-primary/10 border border-primary/20 hover:bg-primary px-4 py-2 md:py-3 rounded-xl transition-all"
               >
-                 <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary group-hover:text-white transition-colors" />
-                 <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary group-hover:text-white transition-colors">Assign</span>
+                 <Plus className="w-3.5 h-3.5 text-primary group-hover:text-white" />
+                 <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary group-hover:text-white">Assign</span>
               </button>
             )}
           </div>
         )}
-         <div className={`grid grid-cols-1 md:grid-cols-2 ${activeTab === "Org Tracking" ? "xl:grid-cols-4" : "xl:grid-cols-3"} gap-4 md:gap-6`}>
+         <div className={`grid grid-cols-2 md:grid-cols-2 ${activeTab === "Org Tracking" ? "xl:grid-cols-4" : "xl:grid-cols-3"} gap-3 md:gap-6`}>
             {/* Squad/Domain Filter - Only for Org Tracking */}
             {activeTab === "Org Tracking" && (
-              <div className="space-y-2 md:space-y-3">
-                 <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Domain Logistics</span>
+              <div className="space-y-1.5 md:space-y-3">
+                 <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Domain</span>
                  <div className="relative">
                    <select
                      value={selectedDomain}
                      onChange={(e) => { setSelectedDomain(e.target.value); setCurrentPage(1); }}
-                     className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-4 pr-10 text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
+                     className="w-full bg-white/5 border border-white/5 rounded-lg md:rounded-xl py-2 md:py-2.5 pl-3 pr-8 text-[9px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
                    >
                      {DOMAINS.map(d => <option key={d} value={d} className="bg-[#111]">{d}</option>)}
                    </select>
-                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                   <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/30 pointer-events-none" />
                  </div>
               </div>
             )}
 
             {/* Status Filter */}
-            <div className="space-y-2 md:space-y-3">
-               <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Task Status</span>
+            <div className="space-y-1.5 md:space-y-3">
+               <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Status</span>
                <div className="relative">
                   <select
                     value={selectedStatus}
                     onChange={(e) => { setSelectedStatus(e.target.value); setCurrentPage(1); }}
-                    className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-4 pr-10 text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
+                    className="w-full bg-white/5 border border-white/5 rounded-lg md:rounded-xl py-2 md:py-2.5 pl-3 pr-8 text-[9px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
                   >
                     {[
                       { label: "All Status", value: "All" },
@@ -485,18 +525,18 @@ export default function TasksPage() {
                       <option key={s.value} value={s.value} className="bg-[#111]">{s.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/30 pointer-events-none" />
                </div>
             </div>
 
             {/* Priority Filter */}
-            <div className="space-y-2 md:space-y-3">
-               <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Urgency</span>
+            <div className="space-y-1.5 md:space-y-3">
+               <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Urgency</span>
                <div className="relative">
                   <select
                     value={selectedPriority}
                     onChange={(e) => { setSelectedPriority(e.target.value); setCurrentPage(1); }}
-                    className="w-full bg-white/5 border border-white/5 rounded-xl py-2.5 pl-4 pr-10 text-[10px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
+                    className="w-full bg-white/5 border border-white/5 rounded-lg md:rounded-xl py-2 md:py-2.5 pl-3 pr-8 text-[9px] md:text-xs font-black uppercase tracking-widest text-stone-300 appearance-none cursor-pointer outline-none focus:border-primary/30 transition-all"
                   >
                     {[
                       { label: "All Priority", value: "All" },
@@ -507,21 +547,21 @@ export default function TasksPage() {
                       <option key={p.value} value={p.value} className="bg-[#111]">{p.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 pointer-events-none" />
+                  <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/30 pointer-events-none" />
                </div>
             </div>
 
             {/* Search Bar */}
-            <div className={`space-y-2 md:space-y-3 ${activeTab === "Org Tracking" ? "" : "md:col-span-2 xl:col-span-1"}`}>
-               <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1">Search</span>
+            <div className={`space-y-1.5 md:space-y-3 ${activeTab === "Org Tracking" ? "col-span-2 xl:col-span-1" : "col-span-2 xl:col-span-1"}`}>
+               <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Search</span>
                <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/40 group-focus-within:text-primary transition-colors" />
                   <input 
                     type="text"
                     value={adminSearch}
                     onChange={(e) => { setAdminSearch(e.target.value); setCurrentPage(1); }}
                     placeholder="Search tasks..."
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl py-2 md:py-3 pl-11 md:pl-12 pr-4 text-xs md:text-sm text-white outline-none focus:border-primary/50 focus:bg-white/[0.05] transition-all placeholder:text-muted-foreground/20"
+                    className="w-full bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl py-2 pl-9 md:pl-10 pr-3 text-[10px] md:text-sm text-white outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/10"
                   />
                </div>
             </div>
@@ -534,147 +574,143 @@ export default function TasksPage() {
           tasks.map((task) => (
             <div 
               key={task._id} 
-              className="bg-card/20 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-3xl p-4 md:p-6 hover:bg-card/30 transition-all group relative overflow-hidden"
+              className="bg-card/20 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-3xl p-4 md:p-5 hover:bg-card/30 transition-all group relative overflow-hidden flex flex-col md:flex-row gap-4 md:items-center"
             >
                {/* Priority Left Trace */}
-               <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(task.priority).split(" ")[1]}`}></div>
+               <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(task.priority).split(" ")[1]} opacity-50`}></div>
 
-               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 md:gap-8">
-                  <div className="flex items-center gap-4 md:gap-6 flex-1">
-                     <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-primary/20 transition-all">
-                        {getStatusIcon(task.status)}
+               {/* Leading Section: Status & Title */}
+               <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-primary/30 transition-all shadow-inner">
+                     {getStatusIcon(task.status)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                     <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                        <h3 className="text-sm md:text-base font-bold text-white tracking-tight truncate">{task.title}</h3>
+                        <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border ${getPriorityColor(task.priority)}`}>
+                          {task.priority}
+                        </span>
                      </div>
-                     <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                           <div className="flex flex-col min-w-0">
-                             <h3 className="text-sm md:text-lg font-bold text-white tracking-tight truncate">{task.title}</h3>
-                             {activeTab === "Org Tracking" && (
-                               <span className="text-[8px] md:text-[10px] text-primary/60 font-black uppercase tracking-widest truncate">{task.team} Team</span>
-                             )}
-                           </div>
-                           <span className={`px-1.5 md:px-2 py-0.5 rounded-full text-[7px] md:text-[8px] font-black uppercase tracking-widest border ${getPriorityColor(task.priority)}`}>
-                             {task.priority}
-                           </span>
-                        </div>
-                        <p className="text-[11px] md:text-sm text-muted-foreground/40 line-clamp-1 group-hover:line-clamp-none transition-all duration-500">{task.description}</p>
-                        
-                        {task.submissionDescription && (
-                          <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/10">
-                            <p className="text-[8px] md:text-[10px] text-primary/60 font-black uppercase tracking-widest mb-1">Submission Note</p>
-                            <p className="text-[10px] md:text-xs text-muted-foreground/60 italic">"{task.submissionDescription}"</p>
-                          </div>
+                     <div className="flex items-center gap-2">
+                        {activeTab === "Org Tracking" && (
+                          <span className="text-[8px] text-primary/60 font-black uppercase tracking-widest">{task.team}</span>
                         )}
+                        <p 
+                          onClick={() => { setDescTask(task); setShowDescModal(true); }}
+                          className="text-[10px] md:text-xs text-muted-foreground/30 line-clamp-1 cursor-pointer hover:text-primary/60 transition-colors italic"
+                        >
+                          {task.description}
+                        </p>
                      </div>
                   </div>
+               </div>
 
-                   <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-10 lg:justify-end">
-                    <div className="space-y-1 md:space-y-1.5 flex-shrink-0">
-                        <p className="text-[8px] md:text-[10px] text-muted-foreground/20 uppercase font-black tracking-widest">Temporal Bound</p>
-                        <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] md:text-xs tracking-tighter uppercase">
-                          <Calendar className="w-3 md:w-3.5 h-3 md:h-3.5 text-primary/40" />
-                          {new Date(task.deadline).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-4 md:gap-10">
-                      {activeTab === "Org Tracking" ? (
-                        <>
-                          <div className="space-y-1 md:space-y-1.5 min-w-[100px] md:min-w-[140px]">
-                              <p className="text-[8px] md:text-[10px] text-muted-foreground/20 uppercase font-black tracking-widest">Commander</p>
-                              <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] md:text-xs">
-                                <div className="hidden md:flex w-6 h-6 rounded-lg bg-primary/10 items-center justify-center">
-                                   <ShieldCheck className="w-3 h-3 text-primary/60" />
-                                </div>
-                                {task.assignedBy?.name || 'Directorate'}
-                              </div>
-                          </div>
-                          <div className="space-y-1 md:space-y-1.5 min-w-[100px] md:min-w-[140px]">
-                              <p className="text-[8px] md:text-[10px] text-muted-foreground/20 uppercase font-black tracking-widest">Agent</p>
-                              <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] md:text-xs">
-                                <div className="hidden md:flex w-6 h-6 rounded-lg bg-blue-500/10 items-center justify-center">
-                                   <User className="w-3 h-3 text-blue-400/60" />
-                                </div>
-                                {task.assignedTo?.name}
-                              </div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="space-y-1 md:space-y-1.5 min-w-[100px] md:min-w-[140px]">
-                            <p className="text-[8px] md:text-[10px] text-muted-foreground/20 uppercase font-black tracking-widest">
-                              {activeTab === "My Tasks" ? "Commander" : "Agent"}
-                            </p>
-                            <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] md:text-xs">
-                              <div className="hidden md:flex w-6 h-6 rounded-lg bg-primary/10 items-center justify-center">
-                                 <User className="w-3 h-3 text-primary/60" />
-                              </div>
-                              {activeTab === "My Tasks" ? task.assignedBy?.name : task.assignedTo?.name}
-                            </div>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 md:gap-3 lg:ml-4">
-                         {activeTab === "My Tasks" && task.status === "TODO" && (
-                           <button 
-                             onClick={() => handleMarkDone(task._id)}
-                             className="px-4 md:px-6 py-2 md:py-2.5 bg-primary/10 border border-primary/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all active:scale-95 shadow-lg shadow-primary/10"
-                           >
-                             Review
-                           </button>
-                         )}
-
-                          {(activeTab === "Team Management" || (activeTab === "Org Tracking" && isHighLevelAdmin(profile?.domain?.role))) && (
-                            <div className="flex items-center gap-2">
-                               {(profile?._id === task.assignedBy?._id || isHighLevelAdmin(profile?.domain?.role)) && (
-                                 <>
-                                   <button 
-                                     onClick={() => openEditModal(task)}
-                                     className="p-2 md:p-2.5 bg-white/5 border border-white/5 rounded-xl text-muted-foreground/40 hover:bg-white/10 hover:text-white transition-all"
-                                   >
-                                     <Edit2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                                   </button>
-                                   <button 
-                                     onClick={() => handleDeleteTask(task._id)}
-                                     className="p-2 md:p-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
-                                   >
-                                     <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
-                                   </button>
-                                 </>
-                               )}
-                               
-                               {(task.status === "UNDER_REVIEW" && (activeTab === "Team Management" || activeTab === "Org Tracking")) && (
-                                 <div className="flex items-center gap-2 ml-1 md:ml-2">
-                                    <button 
-                                      onClick={() => handleApprove(task._id)}
-                                      className="px-3 md:px-6 py-2 md:py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all active:scale-95"
-                                    >
-                                      Approve
-                                    </button>
-                                    <button 
-                                      onClick={() => handleReject(task._id)}
-                                      className="px-3 md:px-6 py-2 md:py-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-rose-400 hover:bg-rose-500 hover:text-white transition-all active:scale-95"
-                                    >
-                                      Reject
-                                    </button>
-                                 </div>
-                               )}
-                            </div>
-                         )}
-
-                         {task.status === "COMPLETED" && (
-                           <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-                              <CheckCircle className="w-3 md:w-3.5 h-3 md:h-3.5 text-emerald-500" />
-                              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Finalized</span>
-                           </div>
-                         )}
-
-                         {task.status === "UNDER_REVIEW" && activeTab === "My Tasks" && (
-                            <div className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                              <Clock className="w-3 md:w-3.5 h-3 md:h-3.5 text-blue-400" />
-                              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-blue-400/60">Review</span>
-                            </div>
-                         )}
+               {/* Logistics Section */}
+               <div className="grid grid-cols-3 md:flex md:items-center gap-2 md:gap-8 border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0 md:pl-8 flex-shrink-0">
+                  <div className="space-y-0.5">
+                      <p className="text-[7px] text-muted-foreground/20 uppercase font-black tracking-widest">Bound</p>
+                      <div className="flex items-center gap-1 text-white/60 font-bold text-[8px] md:text-[10px] tracking-tight uppercase">
+                        <Calendar className="w-2.5 h-2.5 text-primary/30" />
+                        {new Date(task.deadline).toLocaleDateString("en-US", { month: 'short', day: 'numeric' })}
                       </div>
-                    </div>
+                  </div>
+
+                  <div className="space-y-0.5 min-w-0">
+                      <p className="text-[7px] text-muted-foreground/20 uppercase font-black tracking-widest">Cmdr</p>
+                      <p className="text-[8px] md:text-[10px] font-bold text-white/70 truncate">
+                        {task.assignedBy?.name?.split(" ")[0] || "Root"}
+                      </p>
+                  </div>
+
+                  <div className="space-y-0.5 min-w-0">
+                      <p className="text-[7px] text-muted-foreground/20 uppercase font-black tracking-widest">Agent</p>
+                      <p className="text-[8px] md:text-[10px] font-bold text-blue-400/70 truncate">
+                        {task.assignedTo?.name?.split(" ")[0] || "N/A"}
+                      </p>
+                  </div>
+               </div>
+
+               {/* Action Section */}
+               <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-5 shrink-0">
+                  <button 
+                    onClick={() => { setDescTask(task); setShowDescModal(true); }}
+                    className="p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-primary/10 hover:border-primary/30 hover:text-primary text-muted-foreground/20 transition-all group/view"
+                    title="View Instructions"
+                  >
+                    <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </button>
+
+                  {task.submissionDescription && (
+                    <button 
+                      onClick={() => { setSubDescTask(task); setShowSubDescModal(true); }}
+                      className="p-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 text-emerald-500/20 transition-all group/sub"
+                      title="View Submission Note"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                     {activeTab === "My Tasks" && task.status === "TODO" && (
+                       <button 
+                         onClick={() => handleMarkDone(task._id)}
+                         className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all active:scale-95"
+                       >
+                         Review
+                       </button>
+                     )}
+
+                      {(activeTab === "Team Management" || (activeTab === "Org Tracking" && isHighLevelAdmin(profile?.domain?.role))) && (
+                        <div className="flex items-center gap-2">
+                           {(profile?._id === task.assignedBy?._id || isHighLevelAdmin(profile?.domain?.role)) && (
+                             <>
+                               <button 
+                                 onClick={() => openEditModal(task)}
+                                 className="p-2 bg-white/5 border border-white/5 rounded-xl text-muted-foreground/40 hover:bg-white/10 hover:text-white transition-all"
+                               >
+                                 <Edit2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                               </button>
+                               <button 
+                                 onClick={() => handleDeleteTask(task._id)}
+                                 className="p-2 bg-rose-500/5 border border-rose-500/10 rounded-xl text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
+                               >
+                                 <Trash2 className="w-3.5 md:w-4 h-3.5 md:h-4" />
+                               </button>
+                             </>
+                           )}
+                           
+                           {(task.status === "UNDER_REVIEW" && (activeTab === "Team Management" || activeTab === "Org Tracking")) && (
+                             <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => handleApprove(task._id)}
+                                  className="px-3 md:px-5 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all"
+                                >
+                                  Approve
+                                </button>
+                                <button 
+                                  onClick={() => handleReject(task._id)}
+                                  className="px-3 md:px-5 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest text-rose-400 hover:bg-rose-500 hover:text-white transition-all"
+                                >
+                                  Reject
+                                </button>
+                             </div>
+                           )}
+                        </div>
+                     )}
+
+                     {task.status === "COMPLETED" && (
+                       <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+                          <CheckCircle className="w-3 h-3 text-emerald-500" />
+                          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Finalized</span>
+                       </div>
+                     )}
+
+                     {task.status === "UNDER_REVIEW" && activeTab === "My Tasks" && (
+                        <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                          <Clock className="w-3 h-3 text-blue-400" />
+                          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-blue-400/60">Review</span>
+                        </div>
+                     )}
                   </div>
                </div>
             </div>
@@ -878,12 +914,163 @@ export default function TasksPage() {
         </div>
       )}
 
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-sm flex flex-col relative shadow-2xl overflow-hidden">
+               <button onClick={() => setShowRatingModal(false)} className="absolute top-6 right-6 p-2 z-[110] text-muted-foreground/40 hover:text-white transition-all">
+                 <X className="w-5 h-5" />
+               </button>
+
+               <div className="p-8 flex-1 flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                    <ShieldCheck className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white tracking-tight uppercase">Quality Assessment</h2>
+                  <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-widest leading-relaxed">Rate the member's performance on this objective</p>
+                  
+                  <div className="mt-8 flex items-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setTaskRating(star)}
+                        className={`p-2 transition-all transform hover:scale-125 ${taskRating >= star ? 'text-yellow-400' : 'text-white/10'}`}
+                      >
+                        <svg className={`w-8 h-8 ${taskRating >= star ? 'fill-current' : 'fill-none'}`} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+
+                  <p className="mt-4 text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                    {taskRating === 5 ? 'Exceptional' : taskRating === 4 ? 'Optimal' : taskRating === 3 ? 'Standard' : taskRating === 2 ? 'Suboptimal' : 'Critical'}
+                  </p>
+
+                  <div className="w-full mt-10 grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setShowRatingModal(false)}
+                      className="py-3.5 bg-white/5 border border-white/5 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={confirmApproval}
+                      disabled={actionLoading}
+                      className="py-3.5 bg-primary text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}
+                    </button>
+                  </div>
+               </div>
+            </div>
+        </div>
+      )}
+
+      {/* Description Modal */}
+      {showDescModal && descTask && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-lg relative shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <button 
+              onClick={() => setShowDescModal(false)} 
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground/40 hover:text-white transition-all bg-white/5 rounded-xl border border-white/5 z-10"
+            >
+              <X className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+
+            <div className="p-6 md:p-8">
+              <div className="flex items-start gap-4 mb-6 pr-10">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                  <FileText className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h3 className="text-lg md:text-xl font-bold text-white tracking-tight uppercase leading-tight break-words">{descTask.title}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className={`px-2 py-0.5 rounded-full text-[7px] md:text-[8px] font-black uppercase tracking-widest border ${getPriorityColor(descTask.priority)}`}>
+                      {descTask.priority}
+                    </span>
+                    <span className="text-[8px] md:text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Instruction Set</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 max-h-[40vh] overflow-y-auto no-scrollbar">
+                <p className="text-sm md:text-base text-stone-300 leading-relaxed whitespace-pre-wrap font-medium">
+                  {renderTextWithLinks(descTask.description)}
+                </p>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest">Commander</span>
+                  <span className="text-xs font-bold text-white/70">{descTask.assignedBy?.name || "Directorate"}</span>
+                </div>
+                <button 
+                  onClick={() => setShowDescModal(false)}
+                  className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                >
+                  Close Access
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Submission Description Modal */}
+      {showSubDescModal && subDescTask && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-lg relative shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <button 
+              onClick={() => setShowSubDescModal(false)} 
+              className="absolute top-4 right-4 md:top-6 md:right-6 p-2 text-muted-foreground/40 hover:text-white transition-all bg-white/5 rounded-xl border border-white/5 z-10"
+            >
+              <X className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+
+            <div className="p-6 md:p-8">
+              <div className="flex items-start gap-4 mb-6 pr-10">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
+                  <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
+                </div>
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h3 className="text-lg md:text-xl font-bold text-white tracking-tight uppercase leading-tight break-words">Submission Report</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="text-[8px] md:text-[9px] font-black text-emerald-400/60 uppercase tracking-widest bg-emerald-500/5 px-2 py-0.5 rounded-full border border-emerald-500/10">Verification Pending</span>
+                    <span className="text-[8px] md:text-[9px] font-black text-muted-foreground/30 uppercase tracking-widest">Agent Intel</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 max-h-[40vh] overflow-y-auto no-scrollbar">
+                <p className="text-sm md:text-base text-stone-300 leading-relaxed whitespace-pre-wrap font-medium italic">
+                  {renderTextWithLinks(subDescTask.submissionDescription)}
+                </p>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest">Agent Name</span>
+                  <span className="text-xs font-bold text-white/70">{subDescTask.assignedTo?.name || "Field Agent"}</span>
+                </div>
+                <button 
+                  onClick={() => setShowSubDescModal(false)}
+                  className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all border border-white/5"
+                >
+                  Dismiss Intel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.title}
         message={confirmState.message}
         onConfirm={confirmState.onConfirm}
-        onCancel={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
         isLoading={actionLoading}
         confirmText="Delete Task"
       />

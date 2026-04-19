@@ -17,7 +17,7 @@ export const taskService = {
     return apiClient.get(url);
   },
   markTaskDone: (taskId: string, data?: { submissionDescription: string }) => apiClient.put(`/task/${taskId}/mark-done`, data),
-  approveTask: (taskId: string) => apiClient.put(`/task/${taskId}/approve`),
+  approveTask: (taskId: string, rating: number = 5) => apiClient.put(`/task/${taskId}/approve`, { rating }),
   rejectTask: (taskId: string) => apiClient.put(`/task/${taskId}/reject`),
   updateTask: (taskId: string, data: any) => apiClient.put(`/task/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/task/${taskId}`),
@@ -30,4 +30,5 @@ export const taskService = {
     return apiClient.get(url);
   },
   getTaskStats: () => apiClient.get('/task/stats'),
+  getLeaderboard: () => apiClient.get('/task/leaderboard'),
 };
