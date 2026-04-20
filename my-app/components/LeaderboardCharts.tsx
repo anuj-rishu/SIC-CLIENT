@@ -35,6 +35,8 @@ interface LeaderboardChartsProps {
 }
 
 export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
+  const [selectedDomain, setSelectedDomain] = React.useState<string>('all');
+
   // Bar Chart Data: Domain Performance
   const barData = {
     labels: data.domains.map(d => d.name),
@@ -51,14 +53,20 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
     ],
   };
 
-  // Line Chart Data: Point Distribution (Top 10 Members)
+  // Line Chart Data: Performance Curve
+  const filteredMembers = selectedDomain === 'all' 
+    ? data.members 
+    : data.members.filter(m => m.domain === selectedDomain);
+
+  const displayMembers = filteredMembers.slice(0, 10);
+
   const lineData = {
-    labels: data.members.slice(0, 10).map(m => m.name.split(' ')[0]),
+    labels: displayMembers.map(m => m.name.split(' ')[0]),
     datasets: [
       {
         fill: true,
         label: 'Operational Output',
-        data: data.members.slice(0, 10).map(m => m.score),
+        data: displayMembers.map(m => m.score),
         borderColor: '#10b981',
         backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
@@ -129,10 +137,24 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
 
       {/* Line Chart: Performance Curve */}
       <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h4 className="text-xs font-black text-white uppercase tracking-widest">Performance Velocity Curve</h4>
-            <p className="text-[9px] text-muted-foreground/40 font-bold uppercase mt-1 tracking-wider">Operational Output Spread (Top 10 Agents)</p>
+            <p className="text-[9px] text-muted-foreground/40 font-bold uppercase mt-1 tracking-wider">
+              {selectedDomain === 'all' ? 'Global' : selectedDomain} - Top 10 Agents
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select 
+              value={selectedDomain}
+              onChange={(e) => setSelectedDomain(e.target.value)}
+              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-[8px] font-black text-white uppercase tracking-wider outline-none focus:border-primary/40 transition-all"
+            >
+              <option value="all">Global Roster</option>
+              {data.domains.map(d => (
+                <option key={d.name} value={d.name}>{d.name}</option>
+              ))}
+            </select>
           </div>
         </div>
         <div className="h-64">
