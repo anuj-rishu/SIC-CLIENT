@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Trophy, Medal, Crown, Users, User, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Crown, Users, User, ArrowUpRight, TrendingUp, BarChart3 } from 'lucide-react';
+import LeaderboardCharts from './LeaderboardCharts';
 
 interface LeaderboardProps {
   data: {
@@ -11,7 +12,7 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ data }: LeaderboardProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'domains'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'domains' | 'analytics'>('members');
 
   const getRankIcon = (index: number) => {
     switch (index) {
@@ -61,6 +62,17 @@ export default function Leaderboard({ data }: LeaderboardProps) {
           >
             <Users className="w-3.5 h-3.5" />
             Domains
+          </button>
+          <button 
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-wider transition-all ${
+              activeTab === 'analytics' 
+                ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                : 'text-muted-foreground/60 hover:text-white'
+            }`}
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            Analytics
           </button>
         </div>
       </div>
@@ -118,7 +130,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
               </div>
             </div>
           ))
-        ) : (
+        ) : activeTab === 'domains' ? (
           data.domains.map((domain, index) => (
             <div 
               key={domain.name}
@@ -202,10 +214,13 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                 </div>
               </div>
 
-              {/* Background Accent Deco */}
               <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-[50px] pointer-events-none" />
             </div>
           ))
+        ) : (
+          <div className="lg:col-span-2">
+            <LeaderboardCharts data={data} />
+          </div>
         )}
       </div>
     </div>
