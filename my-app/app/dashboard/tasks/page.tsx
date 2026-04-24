@@ -25,7 +25,11 @@ import {
   Trash2,
   ShieldCheck,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Paperclip,
+  Upload,
+  ExternalLink,
+  FileIcon
 } from "lucide-react";
 import { taskService } from "@/services/taskService";
 import { authService } from "@/services/authService";
@@ -71,6 +75,9 @@ export default function TasksPage() {
   const [descTask, setDescTask] = useState<any>(null);
   const [showSubDescModal, setShowSubDescModal] = useState(false);
   const [subDescTask, setSubDescTask] = useState<any>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [submissionFiles, setSubmissionFiles] = useState<File[]>([]);
+  const [previewFile, setPreviewFile] = useState<{ url: string, name: string } | null>(null);
 
   const [confirmState, setConfirmState] = useState({
     isOpen: false,
@@ -228,16 +235,33 @@ export default function TasksPage() {
     }
     setActionLoading(true);
     try {
+      const formData = new FormData();
+      formData.append("title", taskData.title);
+      formData.append("description", taskData.description);
+      formData.append("priority", taskData.priority);
+      formData.append("deadline", taskData.deadline);
+      
       if (editingTaskId) {
-        await taskService.updateTask(editingTaskId, taskData);
+        // updateTask might not handle FormData yet if it's just a simple PUT, 
+        // but let's keep it consistent if we want files in update too.
+        // For now, simple update as before unless files are added.
+        if (selectedFiles.length > 0) {
+          selectedFiles.forEach(file => formData.append("files", file));
+          await taskService.updateTask(editingTaskId, formData);
+        } else {
+          await taskService.updateTask(editingTaskId, taskData);
+        }
         toast.success("Task updated successfully!");
       } else {
-        await taskService.assignTask(taskData);
+        taskData.assignedTo.forEach((id: string) => formData.append("assignedTo[]", id));
+        selectedFiles.forEach(file => formData.append("files", file));
+        await taskService.assignTask(formData);
         toast.success("Task(s) assigned successfully!");
       }
       setShowAssignModal(false);
       setEditingTaskId(null);
       setTaskData({ title: "", description: "", priority: "MEDIUM", deadline: "", assignedTo: [] });
+      setSelectedFiles([]);
       if (activeTab === "Team Management") fetchTeamTasks();
       else if (activeTab === "Org Tracking") fetchAdminTasks();
       else fetchMyTasks();
@@ -294,11 +318,22 @@ export default function TasksPage() {
 
   const submitTask = async () => {
     if (!submissionTaskId) return;
+    
+    if (!submissionDescription.trim()) {
+      toast.error("Please provide a submission note");
+      return;
+    }
+
     setActionLoading(true);
     try {
-      await taskService.markTaskDone(submissionTaskId, { submissionDescription });
+      const formData = new FormData();
+      formData.append("submissionDescription", submissionDescription);
+      submissionFiles.forEach(file => formData.append("files", file));
+      
+      await taskService.markTaskDone(submissionTaskId, formData);
       toast.success("Task submitted for review!");
       setShowSubmissionModal(false);
+      setSubmissionFiles([]);
       fetchMyTasks();
       fetchStats();
     } catch (err: any) {
@@ -602,7 +637,25 @@ export default function TasksPage() {
                           {task.description}
                         </p>
                      </div>
-                  </div>
+                     
+                     {/* Attachments Preview */}
+                     {(task.attachments?.length > 0 || task.submissionAttachments?.length > 0) && (
+                        <div className="flex items-center gap-2 mt-2">
+                           {task.attachments?.length > 0 && (
+                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/5 rounded-lg border border-white/5">
+                               <Paperclip className="w-2.5 h-2.5 text-primary/40" />
+                               <span className="text-[7px] font-black uppercase text-muted-foreground/40">{task.attachments.length} Ref</span>
+                             </div>
+                           )}
+                           {task.submissionAttachments?.length > 0 && (
+                             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+                               <Paperclip className="w-2.5 h-2.5 text-emerald-500/40" />
+                               <span className="text-[7px] font-black uppercase text-emerald-400/40">{task.submissionAttachments.length} Intel</span>
+                             </div>
+                           )}
+                        </div>
+                      )}
+                   </div>
                </div>
 
                {/* Logistics Section */}
@@ -775,6 +828,43 @@ export default function TasksPage() {
                        />
                     </div>
 
+                    <div className="space-y-1.5">
+                       <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Evidence / Attachments</label>
+                       <div className="flex flex-col gap-2">
+                          <label className="group flex items-center justify-center gap-2 w-full py-3 bg-white/[0.02] border border-dashed border-white/10 rounded-xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer">
+                             <Upload className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                             <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-primary">Upload Files</span>
+                             <input 
+                               type="file" 
+                               multiple 
+                               className="hidden" 
+                               onChange={(e) => {
+                                 const files = Array.from(e.target.files || []);
+                                 const validFiles = files.filter(f => f.size <= 10 * 1024 * 1024);
+                                 if (validFiles.length < files.length) toast.error("Some files exceed 10MB limit");
+                                 setSubmissionFiles(prev => [...prev, ...validFiles]);
+                               }}
+                             />
+                          </label>
+                          {submissionFiles.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                               {submissionFiles.map((file, i) => (
+                                 <div key={i} className="flex items-center gap-2 px-2 py-1.5 bg-primary/10 border border-primary/20 rounded-lg group/file">
+                                   <FileIcon className="w-3 h-3 text-primary/60" />
+                                   <span className="text-[8px] font-bold text-white/80 max-w-[100px] truncate">{file.name}</span>
+                                   <button 
+                                     onClick={() => setSubmissionFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                     className="text-muted-foreground/40 hover:text-rose-400 transition-colors"
+                                   >
+                                     <X className="w-2.5 h-2.5" />
+                                   </button>
+                                 </div>
+                               ))}
+                            </div>
+                          )}
+                       </div>
+                    </div>
+
                     <button 
                       onClick={submitTask}
                       disabled={actionLoading}
@@ -899,6 +989,44 @@ export default function TasksPage() {
                     </div>
                  </div>
 
+                 <div className="space-y-1.5">
+                    <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Reference Assets (Max 10MB)</label>
+                    <div className="flex flex-col gap-2">
+                       <label className="group flex items-center justify-center gap-2 w-full py-3 bg-white/[0.02] border border-dashed border-white/10 rounded-xl hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer">
+                          <Paperclip className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/30 group-hover:text-primary">Attach Files</span>
+                          <input 
+                            type="file" 
+                            multiple 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              const validFiles = files.filter(f => f.size <= 10 * 1024 * 1024);
+                              if (validFiles.length < files.length) toast.error("Some files exceed 10MB limit");
+                              setSelectedFiles(prev => [...prev, ...validFiles]);
+                            }}
+                          />
+                       </label>
+                       {selectedFiles.length > 0 && (
+                         <div className="flex flex-wrap gap-2">
+                            {selectedFiles.map((file, i) => (
+                              <div key={i} className="flex items-center gap-2 px-2 py-1.5 bg-primary/10 border border-primary/20 rounded-lg group/file">
+                                <FileIcon className="w-3 h-3 text-primary/60" />
+                                <span className="text-[8px] font-bold text-white/80 max-w-[120px] truncate">{file.name}</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i))}
+                                  className="text-muted-foreground/40 hover:text-rose-400 transition-colors"
+                                >
+                                  <X className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
+                            ))}
+                         </div>
+                       )}
+                    </div>
+                 </div>
+
                  <button 
                    type="submit" 
                    disabled={actionLoading}
@@ -1000,6 +1128,29 @@ export default function TasksPage() {
                 </p>
               </div>
 
+              {descTask.attachments?.length > 0 && (
+                <div className="mt-6 space-y-2">
+                   <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest ml-1">Reference Intel</span>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {descTask.attachments.map((file: any, i: number) => (
+                        <button 
+                          key={i}
+                          onClick={() => setPreviewFile({ url: file.url, name: file.name })}
+                          className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-xl hover:bg-primary/5 hover:border-primary/20 transition-all group/file"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <FileIcon className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white/70 truncate max-w-[120px] group-hover/file:text-white transition-colors">{file.name}</span>
+                          </div>
+                          <ExternalLink className="w-3 h-3 text-muted-foreground/20 group-hover/file:text-primary transition-colors" />
+                        </button>
+                      ))}
+                   </div>
+                </div>
+              )}
+
               <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
                 <div className="flex flex-col">
                   <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest">Commander</span>
@@ -1048,6 +1199,29 @@ export default function TasksPage() {
                 </p>
               </div>
 
+              {subDescTask.submissionAttachments?.length > 0 && (
+                <div className="mt-6 space-y-2">
+                   <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest ml-1">Submission Assets</span>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {subDescTask.submissionAttachments.map((file: any, i: number) => (
+                        <button 
+                          key={i}
+                          onClick={() => setPreviewFile({ url: file.url, name: file.name })}
+                          className="flex items-center justify-between p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl hover:bg-emerald-500/10 hover:border-emerald-500/20 transition-all group/file"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 bg-emerald-500/10 rounded-lg">
+                              <FileIcon className="w-3.5 h-3.5 text-emerald-400" />
+                            </div>
+                            <span className="text-[10px] font-bold text-white/70 truncate max-w-[120px] group-hover/file:text-white transition-colors">{file.name}</span>
+                          </div>
+                          <ExternalLink className="w-3 h-3 text-emerald-500/20 group-hover/file:text-emerald-400 transition-colors" />
+                        </button>
+                      ))}
+                   </div>
+                </div>
+              )}
+
               <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6">
                 <div className="flex flex-col">
                   <span className="text-[8px] font-black text-muted-foreground/30 uppercase tracking-widest">Agent Name</span>
@@ -1074,6 +1248,71 @@ export default function TasksPage() {
         isLoading={actionLoading}
         confirmText="Delete Task"
       />
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-5xl h-[85vh] relative shadow-2xl overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                       <FileIcon className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="text-xs md:text-sm font-bold text-white truncate max-w-[200px] md:max-w-md">{previewFile.name}</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                    <a 
+                      href={previewFile.url} 
+                      download={previewFile.name}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-muted-foreground/40 hover:text-primary transition-all bg-white/5 rounded-xl border border-white/5"
+                      title="Download or Open in New Tab"
+                    >
+                       <ExternalLink className="w-4 h-4 md:w-5 md:h-5" />
+                    </a>
+                    <button 
+                      onClick={() => setPreviewFile(null)} 
+                      className="p-2 text-muted-foreground/40 hover:text-white transition-all bg-white/5 rounded-xl border border-white/5"
+                    >
+                      <X className="w-4 h-4 md:w-5 md:h-5" />
+                    </button>
+                 </div>
+              </div>
+              
+              <div className="flex-1 bg-black/20 flex items-center justify-center overflow-hidden">
+                 {previewFile.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                   <img 
+                     src={previewFile.url} 
+                     alt={previewFile.name} 
+                     className="max-w-full max-h-full object-contain"
+                   />
+                 ) : previewFile.url.toLowerCase().endsWith('.pdf') ? (
+                   <iframe 
+                     src={`${previewFile.url}#toolbar=0`} 
+                     className="w-full h-full border-none"
+                     title="PDF Preview"
+                   />
+                 ) : (
+                   <div className="text-center p-8">
+                      <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                        <FileIcon className="w-10 h-10 text-muted-foreground/20" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-2">Preview Unavailable</h3>
+                      <p className="text-sm text-muted-foreground/60 mb-8">This file type cannot be previewed directly. Please download it to view.</p>
+                      <a 
+                        href={previewFile.url} 
+                        download={previewFile.name}
+                        className="px-8 py-3 bg-primary text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:shadow-lg transition-all"
+                      >
+                        Download File
+                      </a>
+                   </div>
+                 )}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

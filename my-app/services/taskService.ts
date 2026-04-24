@@ -1,7 +1,14 @@
 import apiClient from '../lib/api-client';
 
 export const taskService = {
-  assignTask: (data: any) => apiClient.post('/task/assign', data),
+  assignTask: (data: any) => {
+    if (data instanceof FormData) {
+      return apiClient.post('/task/assign', data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return apiClient.post('/task/assign', data);
+  },
   getMyTasks: (page: number = 1, status?: string, priority?: string, search?: string) => {
     let url = `/task/my-tasks?page=${page}`;
     if (status && status !== 'All') url += `&status=${status}`;
@@ -16,7 +23,14 @@ export const taskService = {
     if (search) url += `&search=${search}`;
     return apiClient.get(url);
   },
-  markTaskDone: (taskId: string, data?: { submissionDescription: string }) => apiClient.put(`/task/${taskId}/mark-done`, data),
+  markTaskDone: (taskId: string, data?: any) => {
+    if (data instanceof FormData) {
+      return apiClient.put(`/task/${taskId}/mark-done`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return apiClient.put(`/task/${taskId}/mark-done`, data);
+  },
   approveTask: (taskId: string, rating: number = 5) => apiClient.put(`/task/${taskId}/approve`, { rating }),
   rejectTask: (taskId: string) => apiClient.put(`/task/${taskId}/reject`),
   updateTask: (taskId: string, data: any) => apiClient.put(`/task/${taskId}`, data),
