@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Trophy, Medal, Crown, Users, User, ArrowUpRight, TrendingUp, BarChart3 } from 'lucide-react';
+import { Trophy, Medal, Crown, Users, User, ArrowUpRight, TrendingUp, BarChart3, Search, ClipboardList } from 'lucide-react';
 import LeaderboardCharts from './LeaderboardCharts';
 
 interface LeaderboardProps {
@@ -13,6 +13,14 @@ interface LeaderboardProps {
 
 export default function Leaderboard({ data }: LeaderboardProps) {
   const [activeTab, setActiveTab] = useState<'members' | 'domains' | 'analytics'>('members');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredMembers = data.members.filter(m => 
+    m.role === "MEMBER" && (
+      m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      m.domain.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   const getRankIcon = (index: number) => {
     switch (index) {
@@ -77,9 +85,22 @@ export default function Leaderboard({ data }: LeaderboardProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3">
+      {activeTab === 'members' && (
+        <div className="relative group/search mb-2">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/30 group-focus-within/search:text-primary transition-colors" />
+          <input 
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search squad personnel..."
+            className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-[10px] md:text-xs text-white outline-none focus:border-primary/50 transition-all placeholder:text-muted-foreground/10"
+          />
+        </div>
+      )}
+
+      <div className={`grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-3 ${activeTab === 'members' ? 'max-h-[600px] overflow-y-auto no-scrollbar pr-1' : ''}`}>
         {activeTab === 'members' ? (
-          data.members.slice(0, 10).map((member, index) => (
+          filteredMembers.map((member, index) => (
             <div 
               key={member.id}
               className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-500 hover:translate-x-1 ${getRankColor(index)} group overflow-hidden`}
@@ -102,20 +123,30 @@ export default function Leaderboard({ data }: LeaderboardProps) {
               </div>
     
               <div className="flex-grow min-w-0 z-10">
-                <div className="flex items-center gap-2 mb-0.5">
+                <div className="flex flex-wrap items-center gap-1.5 mb-1">
                   <h4 className="text-xs md:text-sm font-black text-white truncate">{member.name}</h4>
-                  <div className="px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[6px] font-black uppercase tracking-widest text-muted-foreground/30 whitespace-nowrap">
-                    {member.domain}
+                  <div className="flex gap-1">
+                    <div className="px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[6px] font-black uppercase tracking-widest text-muted-foreground/30 whitespace-nowrap">
+                      {member.domain}
+                    </div>
+                    {member.role !== "MEMBER" && (
+                      <div className="px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[6px] font-black uppercase tracking-widest text-primary whitespace-nowrap">
+                        {member.role}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
-                    <span className="text-[10px] font-black text-emerald-400">{member.score} <span className="text-[7px] opacity-40 uppercase">pts</span></span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ArrowUpRight className="w-2.5 h-2.5 text-blue-400" />
-                    <span className="text-[10px] font-black text-blue-400">{member.completedTasks} <span className="text-[7px] opacity-40 uppercase">tasks</span></span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3 text-primary" />
+                      <span className="text-[10px] font-black text-primary">{member.score} <span className="opacity-40 text-[8px]">PTS</span></span>
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-white/10" />
+                    <div className="flex items-center gap-1">
+                      <ClipboardList className="w-3 h-3 text-muted-foreground/30" />
+                      <span className="text-[10px] font-black text-muted-foreground/60">{member.completedTasks}/{member.totalTasks} <span className="opacity-40 text-[8px]">TASKS</span></span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -144,8 +175,15 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                   </div>
                   <div>
                     <h4 className="text-sm md:text-base font-black text-white uppercase tracking-tighter leading-tight">{domain.name}</h4>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-widest">{domain.memberCount} Personnel</span>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-widest">Lead:</span>
+                        <span className="text-[8px] font-bold text-white/60">{domain.lead || "N/A"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-widest">Assoc:</span>
+                        <span className="text-[8px] font-bold text-white/60">{domain.associate || "N/A"}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

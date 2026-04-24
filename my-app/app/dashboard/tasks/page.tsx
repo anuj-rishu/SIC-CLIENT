@@ -14,6 +14,9 @@ import {
   Plus, 
   Search, 
   User, 
+  FileText,
+  Star,
+  Trophy,
   Filter,
   Loader2,
   X,
@@ -24,7 +27,6 @@ import {
   Edit2,
   Trash2,
   ShieldCheck,
-  FileText,
   MessageSquare,
   Paperclip,
   Upload,
@@ -432,9 +434,9 @@ export default function TasksPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-2xl no-scrollbar">
-          <div className="grid grid-cols-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4">
             {/* Total */}
-            <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
+            <div className="p-4 md:p-7 border-r border-b lg:border-b-0 border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
                 <ClipboardList className="w-5 h-5 text-primary" />
               </div>
@@ -444,7 +446,7 @@ export default function TasksPage() {
               </div>
             </div>
             {/* Pending Approval */}
-            <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
+            <div className="p-4 md:p-7 border-r border-b lg:border-b-0 border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-blue-500/10 items-center justify-center">
                 <AlertCircle className="w-5 h-5 text-blue-400" />
               </div>
@@ -454,13 +456,26 @@ export default function TasksPage() {
               </div>
             </div>
             {/* Completed */}
-            <div className="p-4 md:p-7 flex items-center gap-3">
+            <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-emerald-500/10 items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
                 <p className="text-xl md:text-2xl font-bold text-emerald-500 leading-none">{stats.completed}</p>
                 <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Finished</p>
+              </div>
+            </div>
+            {/* Performance Score */}
+            <div className="p-4 md:p-7 flex items-center gap-3 bg-gradient-to-br from-yellow-500/5 to-transparent">
+              <div className="hidden md:flex w-10 h-10 rounded-xl bg-yellow-500/10 items-center justify-center">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xl md:text-2xl font-bold text-yellow-500 leading-none">{stats.totalScore || 0}</p>
+                  <span className="text-[8px] md:text-[10px] font-black text-yellow-500/40 uppercase tracking-tighter">Points</span>
+                </div>
+                <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Total Score</p>
               </div>
             </div>
           </div>
@@ -746,16 +761,24 @@ export default function TasksPage() {
                                 >
                                   Reject
                                 </button>
-                             </div>
+                              </div>
                            )}
                         </div>
                      )}
 
                      {task.status === "COMPLETED" && (
-                       <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-                          <CheckCircle className="w-3 h-3 text-emerald-500" />
-                          <span className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Finalized</span>
-                       </div>
+                        <div className="flex flex-col items-end gap-1.5">
+                           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+                              <CheckCircle className="w-3 h-3 text-emerald-500" />
+                              <span className="text-[8px] font-black uppercase tracking-[0.2em] text-emerald-400/60">Finalized</span>
+                           </div>
+                           {task.rating && (
+                             <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                               <Star className="w-2.5 h-2.5 text-yellow-500 fill-current" />
+                               <span className="text-[9px] font-black text-yellow-500">{task.rating}</span>
+                             </div>
+                           )}
+                        </div>
                      )}
 
                      {task.status === "UNDER_REVIEW" && activeTab === "My Tasks" && (

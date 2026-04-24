@@ -54,9 +54,10 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
   };
 
   // Line Chart Data: Performance Curve
-  const filteredMembers = selectedDomain === 'all' 
+  const filteredMembers = (selectedDomain === 'all' 
     ? data.members 
-    : data.members.filter(m => m.domain === selectedDomain);
+    : data.members.filter(m => m.domain === selectedDomain))
+    .filter(m => m.role === "MEMBER");
 
   const displayMembers = filteredMembers.slice(0, 10);
 
