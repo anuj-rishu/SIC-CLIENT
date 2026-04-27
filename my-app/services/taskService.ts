@@ -31,8 +31,8 @@ export const taskService = {
     }
     return apiClient.put(`/task/${taskId}/mark-done`, data);
   },
-  approveTask: (taskId: string, rating: number = 5) => apiClient.put(`/task/${taskId}/approve`, { rating }),
-  rejectTask: (taskId: string) => apiClient.put(`/task/${taskId}/reject`),
+  approveTask: (taskId: string, rating: number = 5, approvalFeedback: string) => apiClient.put(`/task/${taskId}/approve`, { rating, approvalFeedback }),
+  rejectTask: (taskId: string, approvalFeedback: string) => apiClient.put(`/task/${taskId}/reject`, { approvalFeedback }),
   updateTask: (taskId: string, data: any) => apiClient.put(`/task/${taskId}`, data),
   deleteTask: (taskId: string) => apiClient.delete(`/task/${taskId}`),
   getAllTasksForAdmin: (team?: string, page: number = 1, status?: string, search?: string, priority?: string) => {

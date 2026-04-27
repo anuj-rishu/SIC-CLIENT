@@ -77,6 +77,9 @@ export default function TasksPage() {
   const [descTask, setDescTask] = useState<any>(null);
   const [showSubDescModal, setShowSubDescModal] = useState(false);
   const [subDescTask, setSubDescTask] = useState<any>(null);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectTaskId, setRejectTaskId] = useState<string | null>(null);
+  const [approvalFeedback, setApprovalFeedback] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [submissionFiles, setSubmissionFiles] = useState<File[]>([]);
   const [previewFile, setPreviewFile] = useState<{ url: string, name: string } | null>(null);
@@ -348,19 +351,27 @@ export default function TasksPage() {
   const handleApprove = (taskId: string) => {
     setRatingTaskId(taskId);
     setTaskRating(5);
+    setApprovalFeedback("");
     setShowRatingModal(true);
   };
 
   const confirmApproval = async () => {
     if (!ratingTaskId) return;
+    
+    if (!approvalFeedback.trim()) {
+      toast.error("Please provide feedback for approval");
+      return;
+    }
+
     setActionLoading(true);
     try {
-      await taskService.approveTask(ratingTaskId, taskRating);
+      await taskService.approveTask(ratingTaskId, taskRating, approvalFeedback);
       if (activeTab === "Org Tracking") fetchAdminTasks();
       else fetchTeamTasks();
       fetchStats();
       toast.success(`Task approved with ${taskRating} stars!`);
       setShowRatingModal(false);
+      setApprovalFeedback("");
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to approve task");
     } finally {
@@ -368,15 +379,33 @@ export default function TasksPage() {
     }
   };
 
-  const handleReject = async (taskId: string) => {
+  const handleReject = (taskId: string) => {
+    setRejectTaskId(taskId);
+    setApprovalFeedback("");
+    setShowRejectModal(true);
+  };
+
+  const confirmRejection = async () => {
+    if (!rejectTaskId) return;
+
+    if (!approvalFeedback.trim()) {
+      toast.error("Please provide feedback for rejection");
+      return;
+    }
+
+    setActionLoading(true);
     try {
-      await taskService.rejectTask(taskId);
+      await taskService.rejectTask(rejectTaskId, approvalFeedback);
       if (activeTab === "Org Tracking") fetchAdminTasks();
       else fetchTeamTasks();
       fetchStats();
       toast.success("Task sent back to pending");
+      setShowRejectModal(false);
+      setApprovalFeedback("");
     } catch (err: any) {
       toast.error(err.response?.data?.msg || "Failed to reject task");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -1098,7 +1127,19 @@ export default function TasksPage() {
                     {taskRating === 5 ? 'Exceptional' : taskRating === 4 ? 'Optimal' : taskRating === 3 ? 'Standard' : taskRating === 2 ? 'Suboptimal' : 'Critical'}
                   </p>
 
-                  <div className="w-full mt-10 grid grid-cols-2 gap-3">
+                  <div className="w-full mt-6 space-y-1.5 text-left">
+                    <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Commander's Feedback</label>
+                    <textarea 
+                      required
+                      value={approvalFeedback}
+                      onChange={(e) => setApprovalFeedback(e.target.value)}
+                      placeholder="Excellent work on this objective..."
+                      rows={3}
+                      className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 px-4 text-white text-xs md:text-sm outline-none focus:border-primary/50 transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="w-full mt-8 grid grid-cols-2 gap-3">
                     <button 
                       onClick={() => setShowRatingModal(false)}
                       className="py-3.5 bg-white/5 border border-white/5 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
@@ -1111,6 +1152,53 @@ export default function TasksPage() {
                       className="py-3.5 bg-primary text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] disabled:opacity-50"
                     >
                       {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm'}
+                    </button>
+                  </div>
+               </div>
+            </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-sm flex flex-col relative shadow-2xl overflow-hidden">
+               <button onClick={() => setShowRejectModal(false)} className="absolute top-6 right-6 p-2 z-[110] text-muted-foreground/40 hover:text-white transition-all">
+                 <X className="w-5 h-5" />
+               </button>
+
+               <div className="p-8 flex-1 flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6">
+                    <AlertCircle className="w-8 h-8 text-rose-500" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white tracking-tight uppercase">Action Required</h2>
+                  <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-widest leading-relaxed">Provide instructions for correction</p>
+                  
+                  <div className="w-full mt-8 space-y-1.5 text-left">
+                    <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Rejection Reason / Feedback</label>
+                    <textarea 
+                      required
+                      value={approvalFeedback}
+                      onChange={(e) => setApprovalFeedback(e.target.value)}
+                      placeholder="Please fix the following issues..."
+                      rows={4}
+                      className="w-full bg-white/[0.03] border border-white/5 rounded-xl py-2.5 md:py-3 px-4 text-white text-xs md:text-sm outline-none focus:border-rose-500/50 transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="w-full mt-10 grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setShowRejectModal(false)}
+                      className="py-3.5 bg-white/5 border border-white/5 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-white/10 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={confirmRejection}
+                      disabled={actionLoading}
+                      className="py-3.5 bg-rose-500 text-white rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-rose-500/20 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Reject Task'}
                     </button>
                   </div>
                </div>
