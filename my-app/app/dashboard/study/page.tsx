@@ -13,14 +13,28 @@ export default function StudyMaterialsPage() {
     const [materials, setMaterials] = useState([]);
     const [withdrawals, setWithdrawals] = useState([]);
     const [coupons, setCoupons] = useState([]);
+    const [requests, setRequests] = useState([]);
 
     // Coupon form state
     const [newCoupon, setNewCoupon] = useState({ code: "", discountPercent: 100, targetEmail: "", maxUses: 1, expiresAt: "" });
+
+    // Admin Upload state
+    const [uploadData, setUploadData] = useState({
+        subjectCode: "",
+        subjectName: "",
+        semester: "1",
+        type: "notes",
+        isPaid: false,
+        pricePoints: 5
+    });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (activeTab === "pending") fetchMaterials();
         else if (activeTab === "withdrawals") fetchWithdrawals();
         else if (activeTab === "coupons") fetchCoupons();
+        else if (activeTab === "requests") fetchRequests();
     }, [activeTab]);
 
     const fetchMaterials = async () => {
@@ -54,6 +68,18 @@ export default function StudyMaterialsPage() {
             if (res.success) setCoupons(res.coupons);
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to load coupons");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchRequests = async () => {
+        setLoading(true);
+        try {
+            const res = await studyMaterialService.getMaterialRequests();
+            if (res.success) setRequests(res.requests);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to load requests");
         } finally {
             setLoading(false);
         }
@@ -120,6 +146,36 @@ export default function StudyMaterialsPage() {
         }
     };
 
+    const handleAdminUpload = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedFile) return toast.error("Please select a file");
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("subjectCode", uploadData.subjectCode);
+        formData.append("subjectName", uploadData.subjectName);
+        formData.append("semester", uploadData.semester);
+        formData.append("type", uploadData.type);
+        formData.append("isPaid", String(uploadData.isPaid));
+        formData.append("pricePoints", String(uploadData.pricePoints));
+
+        try {
+            const res = await studyMaterialService.adminUploadMaterial(formData);
+            if (res.success) {
+                toast.success("Material uploaded and approved successfully");
+                setUploadData({ subjectCode: "", subjectName: "", semester: "1", type: "notes", isPaid: false, pricePoints: 5 });
+                setSelectedFile(null);
+                const fileInput = document.getElementById("admin-file-upload") as HTMLInputElement;
+                if (fileInput) fileInput.value = "";
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to upload material");
+        } finally {
+            setUploading(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -148,6 +204,18 @@ export default function StudyMaterialsPage() {
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "coupons" ? "bg-primary text-white" : "hover:bg-white/5"}`}
                 >
                     Coupons
+                </button>
+                <button 
+                    onClick={() => setActiveTab("requests")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "requests" ? "bg-primary text-white" : "hover:bg-white/5"}`}
+                >
+                    Paper Requests
+                </button>
+                <button 
+                    onClick={() => setActiveTab("upload")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "upload" ? "bg-primary text-white" : "hover:bg-white/5"}`}
+                >
+                    Direct Upload
                 </button>
             </div>
 
@@ -309,6 +377,121 @@ export default function StudyMaterialsPage() {
                             </div>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Tab: Requests */}
+            {!loading && activeTab === "requests" && (
+                <div className="space-y-4">
+                    {requests.length === 0 ? (
+                        <p className="text-muted-foreground">No pending paper requests.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {requests.map((r: any) => (
+                                <div key={r._id} className="bg-[#121214] border border-white/5 rounded-xl p-5 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <h3 className="font-bold text-lg leading-tight">{r.subjectName}</h3>
+                                        <span className="px-2 py-1 text-xs rounded-md bg-primary/20 text-primary font-bold uppercase">{r.type}</span>
+                                    </div>
+                                    <div className="space-y-1 text-sm text-muted-foreground border-t border-white/5 pt-3">
+                                        <p><span className="text-white/60">Subject Code:</span> <span className="text-white font-mono">{r.subjectCode}</span></p>
+                                        <p><span className="text-white/60">Semester:</span> <span className="text-white">{r.semester}</span></p>
+                                        <p><span className="text-white/60">Requester:</span> <span className="text-white">{r.requesterName}</span></p>
+                                        <p className="text-xs text-white/40 mt-2">Requested on {new Date(r.createdAt).toLocaleString()}</p>
+                                    </div>
+                                    <div className="flex space-x-2 pt-2 border-t border-white/5">
+                                        <a 
+                                            href={`https://www.google.com/search?q=SRM+${r.subjectCode}+${r.subjectName}+${r.type}+question+paper`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+                                        >
+                                            Search on Google
+                                        </a>
+                                        <button 
+                                            onClick={async () => {
+                                                if (!confirm("Mark this request as done and remove it?")) return;
+                                                try {
+                                                    await studyMaterialService.deleteMaterialRequest(r._id);
+                                                    toast.success("Request removed");
+                                                    fetchRequests();
+                                                } catch (error: any) {
+                                                    toast.error("Failed to remove request");
+                                                }
+                                            }}
+                                            className="px-3 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                            title="Mark as Done"
+                                        >
+                                            <CheckCircle className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Tab: Direct Upload */}
+            {!loading && activeTab === "upload" && (
+                <div className="max-w-2xl mx-auto bg-[#121214] border border-white/5 rounded-xl p-6 space-y-6">
+                    <div>
+                        <h3 className="font-bold text-xl flex items-center gap-2"><Plus className="w-5 h-5 text-primary" /> Direct Material Upload</h3>
+                        <p className="text-sm text-muted-foreground mt-1">This will automatically mark the material as approved and notify requesters.</p>
+                    </div>
+
+                    <form onSubmit={handleAdminUpload} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm text-white/60 block mb-1">Subject Code</label>
+                                <input required type="text" value={uploadData.subjectCode} onChange={e => setUploadData({...uploadData, subjectCode: e.target.value.toUpperCase()})} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary uppercase" placeholder="e.g. 18CSC304J" />
+                            </div>
+                            <div>
+                                <label className="text-sm text-white/60 block mb-1">Subject Name</label>
+                                <input required type="text" value={uploadData.subjectName} onChange={e => setUploadData({...uploadData, subjectName: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary" placeholder="e.g. Artificial Intelligence" />
+                            </div>
+                            <div>
+                                <label className="text-sm text-white/60 block mb-1">Semester</label>
+                                <select value={uploadData.semester} onChange={e => setUploadData({...uploadData, semester: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary">
+                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-sm text-white/60 block mb-1">Type</label>
+                                <select value={uploadData.type} onChange={e => setUploadData({...uploadData, type: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary">
+                                    <option value="notes">Handwritten Notes</option>
+                                    <option value="sem">End Sem Paper</option>
+                                    <option value="ct">Cycle Test Paper</option>
+                                    <option value="ppt">PPT / PDF</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 p-4 bg-white/5 rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium">Paid Material</label>
+                                <button type="button" onClick={() => setUploadData({...uploadData, isPaid: !uploadData.isPaid})} className={`w-12 h-6 rounded-full transition-colors relative ${uploadData.isPaid ? 'bg-primary' : 'bg-white/10'}`}>
+                                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${uploadData.isPaid ? 'right-1' : 'left-1'}`}></div>
+                                </button>
+                            </div>
+                            {uploadData.isPaid && (
+                                <div>
+                                    <label className="text-sm text-white/60 block mb-1">Price (Points)</label>
+                                    <input type="number" min="1" value={uploadData.pricePoints} onChange={e => setUploadData({...uploadData, pricePoints: Number(e.target.value)})} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary" />
+                                </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="text-sm text-white/60 block mb-1">Document (PDF)</label>
+                            <input id="admin-file-upload" required type="file" accept=".pdf" onChange={e => setSelectedFile(e.target.files ? e.target.files[0] : null)} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-primary hover:file:bg-primary/30" />
+                        </div>
+
+                        <button disabled={uploading} type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                            {uploading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                            {uploading ? "Uploading..." : "Upload & Approve Material"}
+                        </button>
+                    </form>
                 </div>
             )}
         </div>

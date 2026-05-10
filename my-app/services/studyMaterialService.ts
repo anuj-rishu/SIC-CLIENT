@@ -45,5 +45,17 @@ export const studyMaterialService = {
     deleteCoupon: async (id: string) => {
         const response = await axios.delete(`${API_URL}/admin/coupon/${id}`, getAuthHeaders());
         return response.data;
+    },
+    getMaterialRequests: async () => {
+        const response = await axios.get(`${API_URL}/admin/requests`, getAuthHeaders());
+        return response.data;
+    },
+    deleteMaterialRequest: async (id: string) => {
+        const response = await axios.delete(`${API_URL}/admin/requests/${id}`, getAuthHeaders());
+        return response.data;
+    },
+    adminUploadMaterial: async (formData: FormData) => {
+        const response = await axios.post(`${API_URL}/admin/upload`, formData, getAuthHeaders());
+        return response.data;
     }
 };
