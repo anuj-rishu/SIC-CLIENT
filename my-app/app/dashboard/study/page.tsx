@@ -11,7 +11,7 @@ export default function StudyMaterialsPage() {
     
     // State for data
     const [materials, setMaterials] = useState([]);
-    const [withdrawals, setWithdrawals] = useState([]);
+    const [withdrawals, setWithdrawals] = useState([])
     const [coupons, setCoupons] = useState([]);
     const [requests, setRequests] = useState([]);
 
