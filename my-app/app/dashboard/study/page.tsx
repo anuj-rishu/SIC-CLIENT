@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { studyMaterialService } from "@/services/studyMaterialService";
-import { CheckCircle, XCircle, Trash2, Plus, RefreshCw, FileText } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Plus, RefreshCw, FileText, AlertTriangle } from "lucide-react";
+
 import toast from "react-hot-toast";
 
 export default function StudyMaterialsPage() {
@@ -14,6 +15,9 @@ export default function StudyMaterialsPage() {
     const [withdrawals, setWithdrawals] = useState([])
     const [coupons, setCoupons] = useState([]);
     const [requests, setRequests] = useState([]);
+    const [earningsData, setEarningsData] = useState([]);
+    const [reports, setReports] = useState([]);
+
 
     // Coupon form state
     const [newCoupon, setNewCoupon] = useState({ code: "", discountPercent: 100, targetEmail: "", maxUses: 1, expiresAt: "" });
@@ -35,7 +39,10 @@ export default function StudyMaterialsPage() {
         else if (activeTab === "withdrawals") fetchWithdrawals();
         else if (activeTab === "coupons") fetchCoupons();
         else if (activeTab === "requests") fetchRequests();
+        else if (activeTab === "earnings") fetchEarningsData();
+        else if (activeTab === "reports") fetchReports();
     }, [activeTab]);
+
 
     const fetchMaterials = async () => {
         setLoading(true);
@@ -85,6 +92,31 @@ export default function StudyMaterialsPage() {
         }
     };
 
+    const fetchEarningsData = async () => {
+        setLoading(true);
+        try {
+            const res = await studyMaterialService.getEarningsSummary();
+            if (res.success) setEarningsData(res.data);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to load earnings data");
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    const fetchReports = async () => {
+        setLoading(true);
+        try {
+            const res = await studyMaterialService.getReports();
+            if (res.success) setReports(res.reports);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to load reports");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     // Actions
     const handleApproveMaterial = async (id: string) => {
         try {
@@ -107,6 +139,30 @@ export default function StudyMaterialsPage() {
             toast.error(error.response?.data?.error || "Failed to reject");
         }
     };
+
+    const handleDeleteMaterial = async (id: string) => {
+        if (!confirm("CRITICAL: This will permanently delete the material record AND the file from storage. Continue?")) return;
+        try {
+            await studyMaterialService.deleteMaterial(id);
+            toast.success("Material deleted permanently");
+            if (activeTab === "reports") fetchReports();
+            else fetchMaterials();
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to delete material");
+        }
+    };
+
+    const handleUpdateReportStatus = async (id: string, status: string) => {
+        try {
+            await studyMaterialService.updateReportStatus(id, status);
+            toast.success(`Report ${status}`);
+            fetchReports();
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to update report status");
+        }
+    };
+
+
 
     const handleUpdateWithdrawal = async (id: string, status: string) => {
         let comment = "";
@@ -178,13 +234,6 @@ export default function StudyMaterialsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Study Materials Admin</h1>
-                    <p className="text-muted-foreground mt-1">Manage pending uploads, withdrawals, and discount coupons.</p>
-                </div>
-            </div>
-
             {/* Tabs */}
             <div className="flex space-x-2 border-b border-white/10 pb-4 overflow-x-auto">
                 <button 
@@ -217,6 +266,19 @@ export default function StudyMaterialsPage() {
                 >
                     Direct Upload
                 </button>
+                <button 
+                    onClick={() => setActiveTab("earnings")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === "earnings" ? "bg-primary text-white" : "hover:bg-white/5"}`}
+                >
+                    Earnings Summary
+                </button>
+                <button 
+                    onClick={() => setActiveTab("reports")}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === "reports" ? "bg-primary text-white" : "hover:bg-white/5"}`}
+                >
+                    User Reports
+                </button>
+
             </div>
 
             {loading && <div className="flex justify-center py-8"><RefreshCw className="w-6 h-6 animate-spin text-primary" /></div>}
@@ -431,6 +493,116 @@ export default function StudyMaterialsPage() {
                     )}
                 </div>
             )}
+
+            {/* Tab: Earnings Summary */}
+            {!loading && activeTab === "earnings" && (
+                <div className="space-y-4">
+                    {earningsData.length === 0 ? (
+                        <p className="text-muted-foreground">No earnings data available.</p>
+                    ) : (
+                        <div className="overflow-x-auto border border-white/5 rounded-xl bg-[#121214]">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead className="bg-white/5 text-white/60 font-medium">
+                                    <tr>
+                                        <th className="p-4">Student Email</th>
+                                        <th className="p-4">Earned Points</th>
+                                        <th className="p-4">Current Points</th>
+                                        <th className="p-4">Withdrawable (₹)</th>
+                                        <th className="p-4">Total Withdrawn (₹)</th>
+                                        <th className="p-4">Approved Reqs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {earningsData.map((data: any, idx: number) => (
+                                        <tr key={idx} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                                            <td className="p-4 font-mono">{data.userEmail}</td>
+                                            <td className="p-4">{data.earnedPoints}</td>
+                                            <td className="p-4 font-bold text-primary">{data.currentPoints}</td>
+                                            <td className="p-4 font-bold text-emerald-400">₹{data.withdrawableBalance.toFixed(2)}</td>
+                                            <td className="p-4 text-white/60">₹{data.totalWithdrawn.toFixed(2)}</td>
+                                            <td className="p-4">{data.approvedRequestCount}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Tab: Reports */}
+            {!loading && activeTab === "reports" && (
+                <div className="space-y-4">
+                    {reports.length === 0 ? (
+                        <p className="text-muted-foreground">No reports found.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {reports.map((r: any) => (
+                                <div key={r._id} className="bg-[#121214] border border-red-500/10 rounded-xl p-5 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                            <h3 className="font-bold text-lg leading-tight flex items-center gap-2">
+                                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                                                {r.materialId?.subjectName || "Deleted Material"}
+                                            </h3>
+                                            <p className="text-xs text-white/40">Reported by {r.reportedBy}</p>
+                                        </div>
+                                        <span className={`px-2 py-1 text-[10px] rounded-md font-bold uppercase ${r.status === 'pending' ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
+                                            {r.status}
+                                        </span>
+                                    </div>
+
+                                    <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10 space-y-1">
+                                        <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{r.reason.replace('_', ' ')}</p>
+                                        <p className="text-sm text-white/80">{r.comment || "No comment provided."}</p>
+                                    </div>
+
+                                    {r.materialId && (
+                                        <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
+                                            <p><span className="text-white/60">Code:</span> <span className="text-white">{r.materialId.subjectCode}</span></p>
+                                            <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.materialId.type}</span></p>
+                                            
+                                            <div className="flex space-x-2 pt-2">
+                                                <button onClick={() => {
+                                                    let token = "";
+                                                    if (typeof window !== "undefined") {
+                                                        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+                                                        token = match ? match[1] : localStorage.getItem("token") || "";
+                                                    }
+                                                    window.open(`${process.env.NEXT_PUBLIC_MAIN_BACKEND_URL}/admin/view/${r.materialId._id}?token=${token}`, '_blank');
+                                                }} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs">
+                                                    <FileText className="w-4 h-4" /> View PDF
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDeleteMaterial(r.materialId._id)}
+                                                    className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs"
+                                                >
+                                                    <Trash2 className="w-4 h-4" /> Delete Material
+                                                </button>
+                                            </div>
+
+                                            {r.status === 'pending' && (
+                                                <button 
+                                                    onClick={() => handleUpdateReportStatus(r._id, 'dismissed')}
+                                                    className="w-full mt-2 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs border border-emerald-500/10"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" /> Dismiss Report
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    
+                                    {!r.materialId && (
+                                        <p className="text-xs text-white/30 italic">The associated material has already been deleted.</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
 
             {/* Tab: Direct Upload */}
             {!loading && activeTab === "upload" && (

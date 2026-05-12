@@ -42,6 +42,9 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     if (pathname === '/dashboard/clubs') {
       return { title: 'Club Approval', desc: 'Review and approve platform clubs' };
     }
+    if (pathname === '/dashboard/study') {
+      return { title: 'E-Lib Control', desc: 'Manage student stuff' };
+    }
     return { title: 'Overview', desc: 'Monitoring SIC PORTAL status' };
   };
 
