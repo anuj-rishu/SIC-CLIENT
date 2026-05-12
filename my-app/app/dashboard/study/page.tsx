@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { studyMaterialService } from "@/services/studyMaterialService";
-import { CheckCircle, XCircle, Trash2, Plus, RefreshCw, FileText, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Plus, RefreshCw, FileText, AlertTriangle, Edit, Save, X } from "lucide-react";
+
 
 import toast from "react-hot-toast";
 
@@ -17,6 +18,8 @@ export default function StudyMaterialsPage() {
     const [requests, setRequests] = useState([]);
     const [earningsData, setEarningsData] = useState([]);
     const [reports, setReports] = useState([]);
+    const [editingMaterial, setEditingMaterial] = useState<any>(null);
+
 
 
     // Coupon form state
@@ -161,6 +164,24 @@ export default function StudyMaterialsPage() {
             toast.error(error.response?.data?.error || "Failed to update report status");
         }
     };
+
+    const handleSaveEdit = async () => {
+        if (!editingMaterial) return;
+        setLoading(true);
+        try {
+            const res = await studyMaterialService.updateMaterial(editingMaterial._id, editingMaterial);
+            if (res.success) {
+                toast.success("Material updated successfully");
+                setEditingMaterial(null);
+                fetchMaterials();
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to update material");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
 
 
@@ -319,6 +340,9 @@ export default function StudyMaterialsPage() {
                                     </button>
                                 </div>
                                 <div className="flex space-x-2">
+                                    <button onClick={() => setEditingMaterial(m)} className="bg-white/5 hover:bg-white/10 p-2 rounded-lg transition-colors">
+                                        <Edit className="w-4 h-4" />
+                                    </button>
                                     <button onClick={() => handleApproveMaterial(m._id)} className="flex-1 bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-sm">
                                         <CheckCircle className="w-4 h-4" /> Approve
                                     </button>
@@ -326,6 +350,7 @@ export default function StudyMaterialsPage() {
                                         <XCircle className="w-4 h-4" /> Reject
                                     </button>
                                 </div>
+
                             </div>
                         ))
                     )}
@@ -669,6 +694,118 @@ export default function StudyMaterialsPage() {
                     </form>
                 </div>
             )}
+
+            {/* Edit Modal */}
+            {editingMaterial && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-[#121214] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+                        <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+                            <h3 className="text-xl font-bold">Edit Material</h3>
+                            <button onClick={() => setEditingMaterial(null)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Subject Name</label>
+                                <input 
+                                    type="text" 
+                                    value={editingMaterial.subjectName}
+                                    onChange={(e) => setEditingMaterial({ ...editingMaterial, subjectName: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Subject Code</label>
+                                    <input 
+                                        type="text" 
+                                        value={editingMaterial.subjectCode}
+                                        onChange={(e) => setEditingMaterial({ ...editingMaterial, subjectCode: e.target.value.toUpperCase() })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Semester</label>
+                                    <input 
+                                        type="number" 
+                                        value={editingMaterial.semester}
+                                        onChange={(e) => setEditingMaterial({ ...editingMaterial, semester: parseInt(e.target.value) })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Type</label>
+                                    <select 
+                                        value={editingMaterial.type}
+                                        onChange={(e) => setEditingMaterial({ ...editingMaterial, type: e.target.value })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all appearance-none"
+                                    >
+                                        <option value="notes">Notes</option>
+                                        <option value="ppt">PPT</option>
+                                        <option value="ct">CT (Class Test)</option>
+                                        <option value="sem">Semester</option>
+                                    </select>
+
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Status</label>
+                                    <select 
+                                        value={editingMaterial.isPaid ? "paid" : "free"}
+                                        onChange={(e) => setEditingMaterial({ ...editingMaterial, isPaid: e.target.value === "paid" })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all appearance-none"
+                                    >
+                                        <option value="free">Free</option>
+                                        <option value="paid">Paid</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {editingMaterial.isPaid && (
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Price (Points)</label>
+                                    <input 
+                                        type="number" 
+                                        value={editingMaterial.pricePoints}
+                                        onChange={(e) => setEditingMaterial({ ...editingMaterial, pricePoints: parseInt(e.target.value) })}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Description</label>
+                                <textarea 
+                                    value={editingMaterial.description || ""}
+                                    onChange={(e) => setEditingMaterial({ ...editingMaterial, description: e.target.value })}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all min-h-[100px]"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-white/5 bg-white/5 flex gap-3">
+                            <button 
+                                onClick={() => setEditingMaterial(null)}
+                                className="flex-1 py-3 rounded-xl font-medium border border-white/10 hover:bg-white/5 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSaveEdit}
+                                className="flex-1 py-3 rounded-xl font-bold bg-primary text-white hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-5 h-5" /> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

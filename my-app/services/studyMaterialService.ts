@@ -22,7 +22,12 @@ export const studyMaterialService = {
         const response = await axios.post(`${API_URL}/admin/approve/${id}`, {}, getAuthHeaders());
         return response.data;
     },
+    updateMaterial: async (id: string, data: any) => {
+        const response = await axios.patch(`${API_URL}/admin/update/${id}`, data, getAuthHeaders());
+        return response.data;
+    },
     rejectMaterial: async (id: string, comment: string) => {
+
         const response = await axios.post(`${API_URL}/admin/reject/${id}`, { comment }, getAuthHeaders());
         return response.data;
     },
