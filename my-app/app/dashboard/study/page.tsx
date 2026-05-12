@@ -573,13 +573,16 @@ export default function StudyMaterialsPage() {
                                                 }} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs">
                                                     <FileText className="w-4 h-4" /> View PDF
                                                 </button>
-                                                <button 
-                                                    onClick={() => handleDeleteMaterial(r.materialId._id)}
-                                                    className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs"
-                                                >
-                                                    <Trash2 className="w-4 h-4" /> Delete Material
-                                                </button>
+                                                {r.status === 'pending' && (
+                                                    <button 
+                                                        onClick={() => handleDeleteMaterial(r.materialId._id)}
+                                                        className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" /> Delete Material
+                                                    </button>
+                                                )}
                                             </div>
+
 
                                             {r.status === 'pending' && (
                                                 <button 
