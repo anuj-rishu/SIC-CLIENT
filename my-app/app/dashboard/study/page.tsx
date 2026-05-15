@@ -18,7 +18,9 @@ export default function StudyMaterialsPage() {
     const [requests, setRequests] = useState([]);
     const [earningsData, setEarningsData] = useState([]);
     const [reports, setReports] = useState([]);
+    const [requestReports, setRequestReports] = useState([]);
     const [editingMaterial, setEditingMaterial] = useState<any>(null);
+    const [editFile, setEditFile] = useState<File | null>(null);
 
 
 
@@ -111,7 +113,17 @@ export default function StudyMaterialsPage() {
         setLoading(true);
         try {
             const res = await studyMaterialService.getReports();
-            if (res.success) setReports(res.reports);
+            if (res.success) {
+                
+                const activeReports = res.reports.filter((r: any) => r.status === 'pending');
+                setReports(activeReports);
+            }
+            
+            const res2 = await studyMaterialService.getRequestReports();
+            if (res2.success) {
+                const activeReqReports = res2.reports.filter((r: any) => r.status === 'pending');
+                setRequestReports(activeReqReports);
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to load reports");
         } finally {
@@ -165,15 +177,40 @@ export default function StudyMaterialsPage() {
         }
     };
 
+    const handleUpdateRequestReportStatus = async (id: string, status: string) => {
+        try {
+            await studyMaterialService.updateRequestReportStatus(id, status);
+            toast.success(`Report ${status}`);
+            fetchReports();
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || "Failed to update report status");
+        }
+    };
+
     const handleSaveEdit = async () => {
         if (!editingMaterial) return;
         setLoading(true);
         try {
-            const res = await studyMaterialService.updateMaterial(editingMaterial._id, editingMaterial);
+            let res;
+            if (editFile) {
+                const formData = new FormData();
+                formData.append("file", editFile);
+                Object.keys(editingMaterial).forEach(key => {
+                    if (key !== "file" && editingMaterial[key] !== null && editingMaterial[key] !== undefined) {
+                        formData.append(key, editingMaterial[key]);
+                    }
+                });
+                res = await studyMaterialService.updateMaterial(editingMaterial._id, formData);
+            } else {
+                res = await studyMaterialService.updateMaterial(editingMaterial._id, editingMaterial);
+            }
+
             if (res.success) {
                 toast.success("Material updated successfully");
                 setEditingMaterial(null);
-                fetchMaterials();
+                setEditFile(null);
+                if (activeTab === "reports") fetchReports();
+                else fetchMaterials();
             }
         } catch (error: any) {
             toast.error(error.response?.data?.error || "Failed to update material");
@@ -495,22 +532,38 @@ export default function StudyMaterialsPage() {
                                         >
                                             Search on Google
                                         </a>
-                                        <button 
-                                            onClick={async () => {
-                                                if (!confirm("Mark this request as done and remove it?")) return;
-                                                try {
-                                                    await studyMaterialService.deleteMaterialRequest(r._id);
-                                                    toast.success("Request removed");
-                                                    fetchRequests();
-                                                } catch (error: any) {
-                                                    toast.error("Failed to remove request");
-                                                }
-                                            }}
-                                            className="px-3 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors"
-                                            title="Mark as Done"
-                                        >
-                                            <CheckCircle className="w-4 h-4" />
-                                        </button>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (!confirm("Mark this request as done and remove it?")) return;
+                                                    try {
+                                                        await studyMaterialService.deleteMaterialRequest(r._id);
+                                                        toast.success("Request removed");
+                                                        fetchRequests();
+                                                    } catch (error: any) {
+                                                        toast.error("Failed to remove request");
+                                                    }
+                                                }}
+                                                className="px-3 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                                title="Mark as Done"
+                                            >
+                                                <CheckCircle className="w-4 h-4" />
+                                            </button>
+                                            <button 
+                                                onClick={async () => {
+                                                    if (!confirm("Reject this request and notify the user?")) return;
+                                                    try {
+                                                        await studyMaterialService.rejectMaterialRequest(r._id);
+                                                        toast.success("Request rejected and user notified");
+                                                        fetchRequests();
+                                                    } catch (error: any) {
+                                                        toast.error("Failed to reject request");
+                                                    }
+                                                }}
+                                                className="px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+                                                title="Reject Request"
+                                            >
+                                                <XCircle className="w-4 h-4" />
+                                            </button>
                                     </div>
                                 </div>
                             ))}
@@ -557,77 +610,164 @@ export default function StudyMaterialsPage() {
 
             {/* Tab: Reports */}
             {!loading && activeTab === "reports" && (
-                <div className="space-y-4">
-                    {reports.length === 0 ? (
-                        <p className="text-muted-foreground">No reports found.</p>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {reports.map((r: any) => (
-                                <div key={r._id} className="bg-[#121214] border border-red-500/10 rounded-xl p-5 space-y-4">
-                                    <div className="flex justify-between items-start">
-                                        <div className="space-y-1">
-                                            <h3 className="font-bold text-lg leading-tight flex items-center gap-2">
-                                                <AlertTriangle className="w-4 h-4 text-red-500" />
-                                                {r.materialId?.subjectName || "Deleted Material"}
-                                            </h3>
-                                            <p className="text-xs text-white/40">Reported by {r.reportedBy}</p>
+                <div className="space-y-8">
+                    {/* Material Reports Section */}
+                    <div className="space-y-4">
+                        <h3 className="text-xl font-bold flex items-center gap-2 px-1">
+                            <FileText className="w-5 h-5 text-primary" />
+                            Material Issues ({reports.length})
+                        </h3>
+                        {reports.length === 0 ? (
+                            <p className="text-muted-foreground px-1">No active material reports.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {reports.map((r: any) => (
+                                    <div key={r._id} className="bg-[#121214] border border-red-500/10 rounded-xl p-5 space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-1">
+                                                <h3 className="font-bold text-lg leading-tight flex items-center gap-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                                    {r.materialId?.subjectName || "Deleted Material"}
+                                                </h3>
+                                                <p className="text-xs text-white/40">Reported by {r.reportedBy}</p>
+                                            </div>
+                                            <span className={`px-2 py-1 text-[10px] rounded-md font-bold uppercase ${r.status === 'pending' ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
+                                                {r.status}
+                                            </span>
                                         </div>
-                                        <span className={`px-2 py-1 text-[10px] rounded-md font-bold uppercase ${r.status === 'pending' ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
-                                            {r.status}
-                                        </span>
-                                    </div>
 
-                                    <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10 space-y-1">
-                                        <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{r.reason.replace('_', ' ')}</p>
-                                        <p className="text-sm text-white/80">{r.comment || "No comment provided."}</p>
-                                    </div>
+                                        <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10 space-y-1">
+                                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{r.reason.replace('_', ' ')}</p>
+                                            <p className="text-sm text-white/80">{r.comment || "No comment provided."}</p>
+                                        </div>
 
-                                    {r.materialId && (
-                                        <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
-                                            <p><span className="text-white/60">Code:</span> <span className="text-white">{r.materialId.subjectCode}</span></p>
-                                            <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.materialId.type}</span></p>
-                                            
-                                            <div className="flex space-x-2 pt-2">
-                                                <button onClick={() => {
-                                                    let token = "";
-                                                    if (typeof window !== "undefined") {
-                                                        const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
-                                                        token = match ? match[1] : localStorage.getItem("token") || "";
-                                                    }
-                                                    window.open(`${process.env.NEXT_PUBLIC_MAIN_BACKEND_URL}/admin/view/${r.materialId._id}?token=${token}`, '_blank');
-                                                }} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs">
-                                                    <FileText className="w-4 h-4" /> View PDF
-                                                </button>
+                                        {r.materialId && (
+                                            <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
+                                                <p><span className="text-white/60">Code:</span> <span className="text-white">{r.materialId.subjectCode}</span></p>
+                                                <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.materialId.type}</span></p>
+                                                
+                                                <div className="flex space-x-2 pt-2">
+                                                    <button onClick={() => {
+                                                        let token = "";
+                                                        if (typeof window !== "undefined") {
+                                                            const match = document.cookie.match(/(?:^|; )token=([^;]*)/);
+                                                            token = match ? match[1] : localStorage.getItem("token") || "";
+                                                        }
+                                                        window.open(`${process.env.NEXT_PUBLIC_MAIN_BACKEND_URL}/admin/view/${r.materialId._id}?token=${token}`, '_blank');
+                                                    }} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs">
+                                                        <FileText className="w-4 h-4" /> View PDF
+                                                    </button>
+                                                    {r.status === 'pending' && (
+                                                        <div className="flex space-x-2">
+                                                            <button 
+                                                                onClick={() => setEditingMaterial(r.materialId)}
+                                                                className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs px-3"
+                                                            >
+                                                                <Edit className="w-4 h-4" /> Edit
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteMaterial(r.materialId._id)}
+                                                                className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs px-3"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" /> Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                                 {r.status === 'pending' && (
                                                     <button 
-                                                        onClick={() => handleDeleteMaterial(r.materialId._id)}
-                                                        className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs"
+                                                        onClick={() => handleUpdateReportStatus(r._id, 'dismissed')}
+                                                        className="w-full mt-2 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs border border-emerald-500/10"
                                                     >
-                                                        <Trash2 className="w-4 h-4" /> Delete Material
+                                                        <CheckCircle className="w-4 h-4" /> Dismiss Report
                                                     </button>
                                                 )}
                                             </div>
+                                        )}
+                                        
+                                        {!r.materialId && (
+                                            <p className="text-xs text-white/30 italic">The associated material has already been deleted.</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-
-                                            {r.status === 'pending' && (
-                                                <button 
-                                                    onClick={() => handleUpdateReportStatus(r._id, 'dismissed')}
-                                                    className="w-full mt-2 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs border border-emerald-500/10"
-                                                >
-                                                    <CheckCircle className="w-4 h-4" /> Dismiss Report
-                                                </button>
-                                            )}
+                    {/* Request Reports Section */}
+                    <div className="space-y-4 pt-8 border-t border-white/5">
+                        <h3 className="text-xl font-bold flex items-center gap-2 px-1">
+                            <RefreshCw className="w-5 h-5 text-primary" />
+                            Paper Request Issues ({requestReports.length})
+                        </h3>
+                        {requestReports.length === 0 ? (
+                            <p className="text-muted-foreground px-1">No active request reports.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {requestReports.map((r: any) => (
+                                    <div key={r._id} className="bg-[#121214] border border-red-500/10 rounded-xl p-5 space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-1">
+                                                <h3 className="font-bold text-lg leading-tight flex items-center gap-2">
+                                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                                    {r.requestId?.subjectName || "Deleted Request"}
+                                                </h3>
+                                                <p className="text-xs text-white/40">Reported by {r.reportedBy}</p>
+                                            </div>
+                                            <span className={`px-2 py-1 text-[10px] rounded-md font-bold uppercase ${r.status === 'pending' ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/20 text-emerald-500'}`}>
+                                                {r.status}
+                                            </span>
                                         </div>
-                                    )}
 
-                                    
-                                    {!r.materialId && (
-                                        <p className="text-xs text-white/30 italic">The associated material has already been deleted.</p>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                        <div className="p-3 bg-red-500/5 rounded-lg border border-red-500/10 space-y-1">
+                                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest">{r.reason.replace('_', ' ')}</p>
+                                            <p className="text-sm text-white/80">{r.comment || "No comment provided."}</p>
+                                        </div>
+
+                                        {r.requestId && (
+                                            <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
+                                                <p><span className="text-white/60">Subject Code:</span> <span className="text-white font-mono">{r.requestId.subjectCode}</span></p>
+                                                <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.requestId.type}</span></p>
+                                                
+                                                <div className="flex space-x-2 pt-2">
+                                                    {r.status === 'pending' && (
+                                                        <>
+                                                            <button 
+                                                                onClick={async () => {
+                                                                    if (!confirm("Reject this request? This will notify the requester.")) return;
+                                                                    try {
+                                                                        await studyMaterialService.rejectMaterialRequest(r.requestId._id);
+                                                                        toast.success("Request rejected");
+                                                                        fetchReports();
+                                                                    } catch (error: any) {
+                                                                        toast.error("Failed to reject request");
+                                                                    }
+                                                                }}
+                                                                className="flex-1 bg-red-500/20 text-red-500 hover:bg-red-500/30 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-bold text-xs"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" /> Reject Request
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleUpdateRequestReportStatus(r._id, 'dismissed')}
+                                                                className="flex-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-xs border border-emerald-500/10"
+                                                            >
+                                                                <CheckCircle className="w-4 h-4" /> Dismiss Report
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {!r.requestId && (
+                                            <p className="text-xs text-white/30 italic">The associated request has already been handled.</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -785,6 +925,17 @@ export default function StudyMaterialsPage() {
                                     onChange={(e) => setEditingMaterial({ ...editingMaterial, description: e.target.value })}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-primary transition-all min-h-[100px]"
                                 />
+                            </div>
+
+                            <div className="space-y-2 pt-2 border-t border-white/5">
+                                <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Replace File (Optional)</label>
+                                <input 
+                                    type="file" 
+                                    accept=".pdf"
+                                    onChange={(e) => setEditFile(e.target.files ? e.target.files[0] : null)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 focus:outline-none focus:border-primary transition-all file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-primary hover:file:bg-primary/30"
+                                />
+                                {editFile && <p className="text-[10px] text-emerald-400 font-medium">New file selected: {editFile.name}</p>}
                             </div>
                         </div>
 

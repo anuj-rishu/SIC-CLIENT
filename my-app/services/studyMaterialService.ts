@@ -59,6 +59,10 @@ export const studyMaterialService = {
         const response = await axios.delete(`${API_URL}/admin/requests/${id}`, getAuthHeaders());
         return response.data;
     },
+    rejectMaterialRequest: async (id: string) => {
+        const response = await axios.delete(`${API_URL}/admin/requests/reject/${id}`, getAuthHeaders());
+        return response.data;
+    },
     adminUploadMaterial: async (formData: FormData) => {
         const response = await axios.post(`${API_URL}/admin/upload`, formData, getAuthHeaders());
         return response.data;
@@ -77,6 +81,14 @@ export const studyMaterialService = {
     },
     updateReportStatus: async (id: string, status: string) => {
         const response = await axios.patch(`${API_URL}/admin/report/${id}`, { status }, getAuthHeaders());
+        return response.data;
+    },
+    getRequestReports: async () => {
+        const response = await axios.get(`${API_URL}/admin/request-reports`, getAuthHeaders());
+        return response.data;
+    },
+    updateRequestReportStatus: async (id: string, status: string) => {
+        const response = await axios.patch(`${API_URL}/admin/request-report/${id}`, { status }, getAuthHeaders());
         return response.data;
     }
 };
