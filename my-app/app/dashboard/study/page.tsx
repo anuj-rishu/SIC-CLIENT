@@ -36,7 +36,7 @@ export default function StudyMaterialsPage() {
         isPaid: false,
         pricePoints: 5
     });
-    const [selectedFiles, setSelectedFiles] = useState<{file: File, month: string, year: string}[]>([]);
+    const [selectedFiles, setSelectedFiles] = useState<{file: File, month: string, year: string, subTag: string}[]>([]);
     const [uploading, setUploading] = useState(false);
 
     const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -268,7 +268,8 @@ export default function StudyMaterialsPage() {
             const newFiles = Array.from(e.target.files).map(file => ({
                 file,
                 month: MONTHS[new Date().getMonth()],
-                year: new Date().getFullYear().toString()
+                year: new Date().getFullYear().toString(),
+                subTag: ""
             }));
             if (selectedFiles.length + newFiles.length > 10) {
                 toast.error("Maximum 10 files allowed at once");
@@ -289,6 +290,7 @@ export default function StudyMaterialsPage() {
             formData.append("files", item.file);
             formData.append("months", item.month);
             formData.append("years", item.year);
+            formData.append("subTags", item.subTag);
         });
 
         formData.append("subjectCode", uploadData.subjectCode);
@@ -862,29 +864,58 @@ export default function StudyMaterialsPage() {
                                                     <X className="w-4 h-4" />
                                                 </button>
                                             </div>
+                                            {uploadData.type !== 'notes' && uploadData.type !== 'ppt' && (
+                                                <div className="flex gap-2">
+                                                    <select 
+                                                        value={item.month} 
+                                                        onChange={(e) => {
+                                                            const newFiles = [...selectedFiles];
+                                                            newFiles[idx].month = e.target.value;
+                                                            setSelectedFiles(newFiles);
+                                                        }}
+                                                        className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                    >
+                                                        {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                                                    </select>
+                                                    <select 
+                                                        value={item.year} 
+                                                        onChange={(e) => {
+                                                            const newFiles = [...selectedFiles];
+                                                            newFiles[idx].year = e.target.value;
+                                                            setSelectedFiles(newFiles);
+                                                        }}
+                                                        className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                    >
+                                                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                                                    </select>
+                                                </div>
+                                            )}
                                             <div className="flex gap-2">
-                                                <select 
-                                                    value={item.month} 
-                                                    onChange={(e) => {
-                                                        const newFiles = [...selectedFiles];
-                                                        newFiles[idx].month = e.target.value;
-                                                        setSelectedFiles(newFiles);
-                                                    }}
-                                                    className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
-                                                >
-                                                    {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
-                                                </select>
-                                                <select 
-                                                    value={item.year} 
-                                                    onChange={(e) => {
-                                                        const newFiles = [...selectedFiles];
-                                                        newFiles[idx].year = e.target.value;
-                                                        setSelectedFiles(newFiles);
-                                                    }}
-                                                    className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
-                                                >
-                                                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                                                </select>
+                                                {uploadData.type === 'notes' || uploadData.type === 'ppt' ? (
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Chapter / Unit No (e.g. Unit 1)"
+                                                        value={item.subTag}
+                                                        onChange={(e) => {
+                                                            const newFiles = [...selectedFiles];
+                                                            newFiles[idx].subTag = e.target.value;
+                                                            setSelectedFiles(newFiles);
+                                                        }}
+                                                        className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                    />
+                                                ) : uploadData.type === 'ct' ? (
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="CT Type (e.g. CT-1, CL1)"
+                                                        value={item.subTag}
+                                                        onChange={(e) => {
+                                                            const newFiles = [...selectedFiles];
+                                                            newFiles[idx].subTag = e.target.value;
+                                                            setSelectedFiles(newFiles);
+                                                        }}
+                                                        className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                    />
+                                                ) : null}
                                             </div>
                                         </div>
                                     ))}
