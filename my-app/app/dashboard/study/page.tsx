@@ -36,8 +36,11 @@ export default function StudyMaterialsPage() {
         isPaid: false,
         pricePoints: 5
     });
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<{file: File, month: string, year: string}[]>([]);
     const [uploading, setUploading] = useState(false);
+
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const YEARS = Array.from({ length: 11 }, (_, i) => (new Date().getFullYear() - i).toString());
 
     useEffect(() => {
         if (activeTab === "pending") fetchMaterials();
@@ -260,13 +263,34 @@ export default function StudyMaterialsPage() {
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const newFiles = Array.from(e.target.files).map(file => ({
+                file,
+                month: MONTHS[new Date().getMonth()],
+                year: new Date().getFullYear().toString()
+            }));
+            if (selectedFiles.length + newFiles.length > 10) {
+                toast.error("Maximum 10 files allowed at once");
+                return;
+            }
+            setSelectedFiles([...selectedFiles, ...newFiles]);
+        }
+    };
+
     const handleAdminUpload = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedFile) return toast.error("Please select a file");
+        if (selectedFiles.length === 0) return toast.error("Please select at least one file");
 
         setUploading(true);
         const formData = new FormData();
-        formData.append("file", selectedFile);
+        
+        selectedFiles.forEach((item) => {
+            formData.append("files", item.file);
+            formData.append("months", item.month);
+            formData.append("years", item.year);
+        });
+
         formData.append("subjectCode", uploadData.subjectCode);
         formData.append("subjectName", uploadData.subjectName);
         formData.append("semester", uploadData.semester);
@@ -277,9 +301,9 @@ export default function StudyMaterialsPage() {
         try {
             const res = await studyMaterialService.adminUploadMaterial(formData);
             if (res.success) {
-                toast.success("Material uploaded and approved successfully");
+                toast.success(`${selectedFiles.length} material(s) uploaded and approved`);
                 setUploadData({ subjectCode: "", subjectName: "", semester: "1", type: "notes", isPaid: false, pricePoints: 5 });
-                setSelectedFile(null);
+                setSelectedFiles([]);
                 const fileInput = document.getElementById("admin-file-upload") as HTMLInputElement;
                 if (fileInput) fileInput.value = "";
             }
@@ -822,14 +846,72 @@ export default function StudyMaterialsPage() {
                             )}
                         </div>
 
-                        <div>
-                            <label className="text-sm text-white/60 block mb-1">Document (PDF)</label>
-                            <input id="admin-file-upload" required type="file" accept=".pdf" onChange={e => setSelectedFile(e.target.files ? e.target.files[0] : null)} className="w-full bg-black border border-white/10 rounded-lg px-3 py-2 text-white outline-none focus:border-primary file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/20 file:text-primary hover:file:bg-primary/30" />
+                        <div className="space-y-4">
+                            <label className="text-sm text-white/60 block mb-1">Documents (PDF • Max 10)</label>
+                            
+                            {selectedFiles.length > 0 && (
+                                <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
+                                    {selectedFiles.map((item, idx) => (
+                                        <div key={idx} className="bg-white/5 border border-white/10 rounded-lg p-3 flex flex-col gap-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                                                    <span className="text-xs truncate">{item.file.name}</span>
+                                                </div>
+                                                <button type="button" onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))} className="text-white/40 hover:text-white">
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <select 
+                                                    value={item.month} 
+                                                    onChange={(e) => {
+                                                        const newFiles = [...selectedFiles];
+                                                        newFiles[idx].month = e.target.value;
+                                                        setSelectedFiles(newFiles);
+                                                    }}
+                                                    className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                >
+                                                    {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                                                </select>
+                                                <select 
+                                                    value={item.year} 
+                                                    onChange={(e) => {
+                                                        const newFiles = [...selectedFiles];
+                                                        newFiles[idx].year = e.target.value;
+                                                        setSelectedFiles(newFiles);
+                                                    }}
+                                                    className="flex-1 bg-black border border-white/10 rounded px-2 py-1 text-xs outline-none focus:border-primary"
+                                                >
+                                                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {selectedFiles.length < 10 && (
+                                <div className="relative border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer group">
+                                    <input 
+                                        id="admin-file-upload" 
+                                        type="file" 
+                                        accept=".pdf" 
+                                        multiple
+                                        onChange={handleFileChange} 
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                    <Plus className="w-8 h-8 text-white/20 group-hover:text-primary mx-auto mb-2" />
+                                    <p className="text-sm text-white/40 group-hover:text-white/60">
+                                        {selectedFiles.length > 0 ? "Add more files" : "Click to select PDF files"}
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
-                        <button disabled={uploading} type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                        <button disabled={uploading || selectedFiles.length === 0} type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-6">
                             {uploading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                            {uploading ? "Uploading..." : "Upload & Approve Material"}
+                            {uploading ? "Uploading..." : `Upload & Approve ${selectedFiles.length} Material${selectedFiles.length === 1 ? '' : 's'}`}
                         </button>
                     </form>
                 </div>
