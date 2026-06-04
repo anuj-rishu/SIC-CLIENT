@@ -91,7 +91,7 @@ export default function TasksPage() {
     onConfirm: async () => {},
   });
 
-  const isAssignableRole = ["FOUNDER", "PRESIDENT", "VICE PRESIDENT", "VICEPRESIDENT", "TECHNICAL DIRECTOR", "LEAD", "ASSOCIATE"].includes(profile?.domain?.role?.toUpperCase() || "");
+  const isAssignableRole = ["FOUNDER", "PRESIDENT", "VICE PRESIDENT", "TECHNICAL DIRECTOR", "LEAD", "ASSOCIATE"].includes(profile?.domain?.role?.toUpperCase() || "");
 
   useEffect(() => {
     const initialize = async () => {
@@ -149,7 +149,7 @@ export default function TasksPage() {
 
   const isHighLevelAdmin = (role: string) => {
     const r = role?.toUpperCase();
-    return r === "FOUNDER" || r === "PRESIDENT" || r === "VICE PRESIDENT" || r === "VICEPRESIDENT";
+    return r === "FOUNDER" || r === "PRESIDENT" || r === "VICE PRESIDENT";
   };
 
   const fetchAssignableMembers = async () => {

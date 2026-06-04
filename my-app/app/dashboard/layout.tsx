@@ -17,7 +17,7 @@ export default function DashboardLayout({
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-72 flex flex-col min-h-screen relative w-full">
+      <div className="flex-1 lg:ml-72 flex flex-col min-h-screen relative w-full min-w-0 overflow-x-hidden">
         {/* Animated Background Blobs */}
         <div className="fixed top-[20%] right-[-5%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
         <div className="fixed bottom-[10%] left-[20%] w-[25%] h-[25%] bg-blue-600/5 rounded-full blur-[100px] pointer-events-none"></div>

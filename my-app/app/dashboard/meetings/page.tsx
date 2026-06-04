@@ -74,7 +74,6 @@ export default function MeetingsPage() {
     { id: 1, title: "Logistics", icon: Calendar },
     { id: 2, title: "Personnel", icon: Users },
     { id: 3, title: "Deliberations", icon: MessageSquare },
-    { id: 4, title: "Roadmap", icon: Target },
   ];
 
   const [formData, setFormData] = useState<any>({
@@ -84,10 +83,7 @@ export default function MeetingsPage() {
     location: "",
     domain: "All",
     attendees: [],
-    agenda: "",
     discussionPoints: "",
-    decisionsTaken: "",
-    actionItems: [{ task: "", responsiblePerson: "", deadline: "" }],
     nextMeetingDate: "",
     notes: "",
   });
@@ -151,10 +147,6 @@ export default function MeetingsPage() {
         ...mom,
         date: mom.date?.split('T')[0] || "",
         nextMeetingDate: mom.nextMeetingDate?.split('T')[0] || "",
-        actionItems: mom.actionItems.map((item: any) => ({
-          ...item,
-          deadline: item.deadline?.split('T')[0] || ""
-        }))
       });
     } else {
       setEditingMoM(null);
@@ -165,10 +157,7 @@ export default function MeetingsPage() {
         location: "",
         domain: profile?.domain?.name || "All",
         attendees: [],
-        agenda: "",
         discussionPoints: "",
-        decisionsTaken: "",
-        actionItems: [{ task: "", responsiblePerson: "", deadline: "" }],
         nextMeetingDate: "",
         notes: "",
       });
@@ -227,16 +216,31 @@ export default function MeetingsPage() {
     }
   };
 
-  const handleAddField = (field: "actionItems") => {
-    setFormData({
-      ...formData,
-      actionItems: [...formData.actionItems, { task: "", responsiblePerson: "", deadline: "" }]
-    });
-  };
-
-  const handleRemoveField = (field: "actionItems", index: number) => {
-    const updated = formData.actionItems.filter((_: any, i: number) => i !== index);
-    setFormData({ ...formData, actionItems: updated });
+  const handleNextStep = () => {
+    if (currentStep === 1) {
+      if (!formData.title?.trim()) {
+        toast.error("Please enter a meeting title");
+        return;
+      }
+      if (!formData.date) {
+        toast.error("Please select a meeting date");
+        return;
+      }
+      if (!formData.time) {
+        toast.error("Please select a meeting time");
+        return;
+      }
+      if (!formData.location?.trim()) {
+        toast.error("Please enter a meeting location");
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (formData.attendees.length === 0) {
+        toast.error("Please select at least one attendee");
+        return;
+      }
+    }
+    setCurrentStep(prev => prev + 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,23 +249,14 @@ export default function MeetingsPage() {
         toast.error("Please select at least one attendee");
         return;
     }
-    // Filter out completely empty action items
-    const filteredActionItems = formData.actionItems.filter(
-      (item: any) => item.task.trim() || item.responsiblePerson.trim() || item.deadline.trim()
-    );
-
-    const submissionData = {
-      ...formData,
-      actionItems: filteredActionItems
-    };
 
     setActionLoading(true);
     try {
       if (editingMoM) {
-        await momService.updateMoM(editingMoM._id, submissionData);
+        await momService.updateMoM(editingMoM._id, formData);
         toast.success("Minutes updated successfully");
       } else {
-        await momService.createMoM(submissionData);
+        await momService.createMoM(formData);
         toast.success("Minutes created successfully");
       }
       setShowModal(false);
@@ -900,7 +895,7 @@ export default function MeetingsPage() {
                      </div>
                      <div>
                         <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-widest">{editingMoM ? "Modify Minutes" : "Capture Meeting Details"}</h3>
-                        <p className="text-[8px] md:text-[9px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] mt-0.5">Step {currentStep} of 4 • {steps[currentStep-1].title}</p>
+                        <p className="text-[8px] md:text-[9px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] mt-0.5">Step {currentStep} of {steps.length} • {steps[currentStep-1].title}</p>
                      </div>
                   </div>
                   <div className="flex items-center gap-3 md:gap-6">
@@ -915,7 +910,7 @@ export default function MeetingsPage() {
                               }`}>
                                  <step.icon className="w-4 h-4" />
                               </div>
-                              {step.id < 4 && (
+                              {step.id < steps.length && (
                                  <div className={`w-4 md:w-8 h-0.5 rounded-full transition-all ${
                                     currentStep > step.id ? 'bg-primary/40' : 'bg-white/5'
                                  }`} />
@@ -1097,100 +1092,21 @@ export default function MeetingsPage() {
                   </section>
                )}
 
-               {/* Step 3: Deliberations */}
+               {/* Step 3: Deliberations & Notes */}
                {currentStep === 3 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                      <div className="flex items-center gap-2 mb-2">
                         <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Deliberations & Context</h4>
+                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Deliberations & Notes</h4>
                      </div>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                         <div className="space-y-2 group">
-                           <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-primary transition-colors">Meeting Agenda</label>
-                           <textarea rows={4} value={formData.agenda} onChange={(e) => setFormData({...formData, agenda: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Primary objectives..." />
-                        </div>
-                        <div className="space-y-2 group">
-                           <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-primary transition-colors">Discussion Timeline</label>
-                           <textarea rows={4} value={formData.discussionPoints} onChange={(e) => setFormData({...formData, discussionPoints: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Detailed chronological log..." />
-                        </div>
-                        <div className="space-y-2 group">
-                           <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-primary transition-colors">Key Decisions</label>
-                           <textarea rows={4} value={formData.decisionsTaken} onChange={(e) => setFormData({...formData, decisionsTaken: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Finalized resolutions..." />
-                        </div>
-                     </div>
-                  </section>
-               )}
-
-               {/* Step 4: Roadmap */}
-               {currentStep === 4 && (
-                  <section className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                     <div className="space-y-6">
-                        <div className="flex items-center justify-between mb-2">
-                           <div className="flex items-center gap-2">
-                              <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-                              <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Tactical Roadmap</h4>
-                           </div>
-                           <button type="button" onClick={() => handleAddField('actionItems')} className="text-[9px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5 hover:text-white transition-colors bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
-                              <PlusCircle className="w-3.5 h-3.5" /> Initialize Action
-                           </button>
-                        </div>
-                        <div className="space-y-4 md:space-y-6 pr-2">
-                           {formData.actionItems.map((item: any, i: number) => (
-                              <div key={i} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end bg-white/[0.02] p-4 md:p-5 rounded-2xl md:rounded-[2rem] border border-white/5 relative group transition-all hover:bg-white/[0.04] hover:border-white/10">
-                                 <div className="md:col-span-12 lg:col-span-5 space-y-1">
-                                    <label className="text-[8px] font-black text-muted-foreground/20 uppercase ml-1">Deliverable Task</label>
-                                    <input value={item.task} onChange={(e) => {
-                                       const updated = [...formData.actionItems];
-                                       updated[i].task = e.target.value;
-                                       setFormData({...formData, actionItems: updated});
-                                    }} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs text-white outline-none focus:border-primary transition-all" placeholder="Quantifiable action..." />
-                                 </div>
-                                 <div className="md:col-span-5 lg:col-span-3 space-y-1">
-                                    <label className="text-[8px] font-black text-muted-foreground/20 uppercase ml-1">Responsible Entity</label>
-                                    <input value={item.responsiblePerson} onChange={(e) => {
-                                       const updated = [...formData.actionItems];
-                                       updated[i].responsiblePerson = e.target.value;
-                                       setFormData({...formData, actionItems: updated});
-                                    }} className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-xs text-white outline-none focus:border-primary transition-all" placeholder="Agent Name" />
-                                 </div>
-                                 <div className="md:col-span-12 lg:col-span-3 space-y-1">
-                                    <label className="text-[8px] font-black text-muted-foreground/20 uppercase ml-1">Timeline Deadline</label>
-                                    <div className="relative group/field">
-                                     <div className="absolute left-0 inset-y-0 pl-3 flex items-center pointer-events-none z-10">
-                                        <Calendar className="w-3.5 h-3.5 text-primary/40 group-focus-within/field:text-primary transition-colors" />
-                                     </div>
-                                     <input 
-                                        type="date" 
-                                        value={item.deadline} 
-                                        onChange={(e) => {
-                                           const updated = [...formData.actionItems];
-                                           updated[i].deadline = e.target.value;
-                                           setFormData({...formData, actionItems: updated});
-                                        }} 
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 md:py-3 pl-10 pr-4 text-xs text-white outline-none focus:border-primary transition-all appearance-none [color-scheme:dark]" 
-                                     />
-                                  </div>
-                                 </div>
-                                 <div className="md:col-span-2 lg:col-span-1 flex justify-center pb-1">
-                                    {formData.actionItems.length > 1 && (
-                                       <button type="button" onClick={() => handleRemoveField('actionItems', i)} className="p-2.5 bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/5">
-                                          <Trash2 className="w-4 h-4" />
-                                       </button>
-                                    )}
-                                 </div>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
-
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-2 mb-2">
-                           <div className="w-1.5 h-4 bg-primary rounded-full"></div>
-                           <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Post-Meeting Strategy</h4>
+                           <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-primary transition-colors">Discussion Points</label>
+                           <textarea rows={6} value={formData.discussionPoints} onChange={(e) => setFormData({...formData, discussionPoints: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Detailed chronological log..." />
                         </div>
                         <div className="space-y-2 group">
                            <label className="text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] ml-1 group-focus-within:text-primary transition-colors">Supplementary Notes</label>
-                           <textarea rows={4} value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Side context or constraints..." />
+                           <textarea rows={6} value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 md:py-4 px-4 md:px-6 text-white text-sm outline-none focus:border-primary transition-all resize-none shadow-inner" placeholder="Side context or constraints..." />
                         </div>
                      </div>
                   </section>
@@ -1216,8 +1132,8 @@ export default function MeetingsPage() {
                       <button type="button" onClick={() => setCurrentStep(prev => prev - 1)} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white border border-white/5 hover:border-white/10 transition-all whitespace-nowrap active:scale-95">Back</button>
                    )}
 
-                   {currentStep < 4 ? (
-                      <button type="button" onClick={() => setCurrentStep(prev => prev + 1)} className="flex-[2] md:flex-none py-3 md:py-4 px-6 md:px-12 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 md:gap-3">
+                   {currentStep < 3 ? (
+                      <button type="button" onClick={handleNextStep} className="flex-[2] md:flex-none py-3 md:py-4 px-6 md:px-12 bg-primary text-white rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] hover:bg-blue-600 shadow-xl shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 md:gap-3">
                          Next <ChevronRight className="w-4 h-4" />
                       </button>
                    ) : (

@@ -17,7 +17,9 @@ import {
   FileText,
   Flag,
   CheckCircle2,
-  BookOpen
+  BookOpen,
+  Bug,
+  FileSpreadsheet
 } from 'lucide-react';
 import { authService } from '@/services';
 import { deleteCookie } from 'cookies-next';
@@ -27,12 +29,13 @@ const menuItems = [
   { name: 'Profile', icon: UserCircle, path: '/dashboard/profile' },
   { name: 'Members', icon: Users, path: '/dashboard/members' },
   { name: 'Interviews', icon: CalendarDays, path: '/dashboard/interviews' },
+  { name: 'Club Selection', icon: FileSpreadsheet, path: '/dashboard/selections' },
   { name: 'Tasks', icon: ListTodo, path: '/dashboard/tasks' },
   { name: 'Meetings', icon: FileText, path: '/dashboard/meetings' },
-  { name: 'Website Control', icon: Globe, path: '/dashboard/website-control' },
   { name: 'SRM Verse Report', icon: Flag, path: '/dashboard/reports' },
   { name: 'Club Approval', icon: CheckCircle2, path: '/dashboard/clubs' },
   { name: 'E-Lib Control', icon: BookOpen, path: '/dashboard/study' },
+  { name: 'Sentry Logs', icon: Bug, path: '/dashboard/sentry-logs' },
 ];
 
 export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {

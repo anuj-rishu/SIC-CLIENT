@@ -33,7 +33,14 @@ export const taskService = {
   },
   approveTask: (taskId: string, rating: number = 5, approvalFeedback: string) => apiClient.put(`/task/${taskId}/approve`, { rating, approvalFeedback }),
   rejectTask: (taskId: string, approvalFeedback: string) => apiClient.put(`/task/${taskId}/reject`, { approvalFeedback }),
-  updateTask: (taskId: string, data: any) => apiClient.put(`/task/${taskId}`, data),
+  updateTask: (taskId: string, data: any) => {
+    if (data instanceof FormData) {
+      return apiClient.put(`/task/${taskId}`, data, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+    }
+    return apiClient.put(`/task/${taskId}`, data);
+  },
   deleteTask: (taskId: string) => apiClient.delete(`/task/${taskId}`),
   getAllTasksForAdmin: (team?: string, page: number = 1, status?: string, search?: string, priority?: string) => {
     let url = `/task/all?page=${page}`;

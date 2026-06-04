@@ -23,7 +23,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     }
     if (pathname === '/dashboard/tasks') {
       const role = profile?.domain?.role?.toUpperCase();
-      const isExec = role === "FOUNDER" || role === "PRESIDENT" || role === "VICE PRESIDENT" || role === "VICEPRESIDENT";
+      const isExec = role === "FOUNDER" || role === "PRESIDENT" || role === "VICE PRESIDENT";
       const target = isExec 
         ? profile.domain.role.charAt(0).toUpperCase() + profile.domain.role.slice(1).toLowerCase() 
         : profile?.domain?.name || 'Squad';
@@ -33,8 +33,8 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
         desc: `Monitor tasks for ${target}` 
       };
     }
-    if (pathname === '/dashboard/website-control') {
-      return { title: 'Website Control', desc: 'Manage landing page and resources' };
+    if (pathname === '/dashboard/selections') {
+      return { title: 'Club Selection', desc: 'Import club selection CSV and manage lists' };
     }
     if (pathname === '/dashboard/reports') {
       return { title: 'SRM Verse Report', desc: 'Monitor and manage platform reports' };
