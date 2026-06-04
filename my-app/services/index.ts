@@ -6,7 +6,6 @@ export * from './adminService';
 export * from './taskService';
 export * from './momService';
 export * from './meetingService';
-export * from './reportService';
 export * from './clubService';
 export * from './sentryService';
 export * from './selectionService';

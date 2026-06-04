@@ -36,14 +36,14 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
     if (pathname === '/dashboard/selections') {
       return { title: 'Club Selection', desc: 'Import club selection CSV and manage lists' };
     }
-    if (pathname === '/dashboard/reports') {
-      return { title: 'SRM Verse Report', desc: 'Monitor and manage platform reports' };
-    }
     if (pathname === '/dashboard/clubs') {
       return { title: 'Club Approval', desc: 'Review and approve platform clubs' };
     }
     if (pathname === '/dashboard/study') {
       return { title: 'E-Lib Control', desc: 'Manage student stuff' };
+    }
+    if (pathname === '/dashboard/sentry-logs') {
+      return { title: 'Sentry Logs', desc: 'Monitor and manage Sentry telemetry' };
     }
     return { title: 'Overview', desc: 'Monitoring SIC PORTAL status' };
   };

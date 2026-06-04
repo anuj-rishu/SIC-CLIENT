@@ -444,20 +444,7 @@ export default function SentryLogsPage() {
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="w-8 h-8 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/20">
-              <Bug className="w-4 h-4 text-red-400" />
-            </div>
-            <h2 className="text-lg md:text-xl font-black text-white tracking-tighter">
-              Sentry Error Intelligence
-            </h2>
-          </div>
-          <p className="text-[7px] md:text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] md:tracking-[0.3em] ml-[42px]">
-            SRM Academia — Live Error Monitoring
-          </p>
-        </div>
+      <div className="flex items-center justify-end">
         <button
           onClick={handleRefresh}
           disabled={refreshing}
