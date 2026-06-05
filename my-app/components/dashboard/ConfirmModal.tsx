@@ -32,7 +32,7 @@ export default function ConfirmModal({
         <button onClick={onCancel} disabled={isLoading} className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-white transition-all rounded-xl hover:bg-white/5 disabled:opacity-50">
           <X className="w-5 h-5" />
         </button>
-        
+
         <div className="text-center sm:text-left mb-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20 shadow-inner">
@@ -44,7 +44,7 @@ export default function ConfirmModal({
             </div>
           </div>
         </div>
-        
+
         <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8 pt-6 border-t border-white/5">
           <button 
             onClick={onCancel}

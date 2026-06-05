@@ -59,7 +59,7 @@ export default function ClubApprovalPage() {
 
   const handleApprove = async (id: string) => {
     if (!window.confirm("Are you sure you want to approve this club?")) return;
-    
+
     try {
       const res = await clubService.approveClub(id);
       if (res.data.success) {
@@ -81,7 +81,7 @@ export default function ClubApprovalPage() {
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Search Bar */}
+
       <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-3xl shadow-xl">
            <div className="relative group flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors duration-300" />
@@ -122,11 +122,11 @@ export default function ClubApprovalPage() {
               key={club._id}
               className="group relative bg-[#121214]/40 border border-white/5 rounded-[2.5rem] p-6 lg:p-8 hover:bg-[#121214]/60 transition-all duration-500 hover:border-primary/20 shadow-2xl overflow-hidden"
             >
-              {/* Corner Accent */}
+
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[50px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-all duration-700 opacity-0 group-hover:opacity-100"></div>
 
               <div className="flex flex-col gap-6 relative z-10">
-                {/* Header: Club Info */}
+
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
                     {club.logo ? (
@@ -160,7 +160,6 @@ export default function ClubApprovalPage() {
                   </button>
                 </div>
 
-                {/* Description Section */}
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
                    <p className="text-[8px] font-black text-primary/60 uppercase tracking-widest flex items-center gap-2">
                       About the Club
@@ -170,7 +169,6 @@ export default function ClubApprovalPage() {
                    </p>
                 </div>
 
-                {/* Meta Footer */}
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center gap-4">
                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground/30 font-bold uppercase italic">

@@ -4,14 +4,12 @@ import React, { useState, useEffect } from "react";
 import { studyMaterialService } from "@/services/studyMaterialService";
 import { CheckCircle, XCircle, Trash2, Plus, RefreshCw, FileText, AlertTriangle, Edit, Save, X } from "lucide-react";
 
-
 import toast from "react-hot-toast";
 
 export default function StudyMaterialsPage() {
     const [activeTab, setActiveTab] = useState("pending");
     const [loading, setLoading] = useState(false);
-    
-    // State for data
+
     const [materials, setMaterials] = useState([]);
     const [withdrawals, setWithdrawals] = useState([])
     const [coupons, setCoupons] = useState([]);
@@ -22,12 +20,8 @@ export default function StudyMaterialsPage() {
     const [editingMaterial, setEditingMaterial] = useState<any>(null);
     const [editFile, setEditFile] = useState<File | null>(null);
 
-
-
-    // Coupon form state
     const [newCoupon, setNewCoupon] = useState({ code: "", discountPercent: 100, targetEmail: "", maxUses: 1, expiresAt: "" });
 
-    // Admin Upload state
     const [uploadData, setUploadData] = useState({
         subjectCode: "",
         subjectName: "",
@@ -50,7 +44,6 @@ export default function StudyMaterialsPage() {
         else if (activeTab === "earnings") fetchEarningsData();
         else if (activeTab === "reports") fetchReports();
     }, [activeTab]);
-
 
     const fetchMaterials = async () => {
         setLoading(true);
@@ -111,17 +104,17 @@ export default function StudyMaterialsPage() {
             setLoading(false);
         }
     };
-    
+
     const fetchReports = async () => {
         setLoading(true);
         try {
             const res = await studyMaterialService.getReports();
             if (res.success) {
-                
+
                 const activeReports = res.reports.filter((r: any) => r.status === 'pending');
                 setReports(activeReports);
             }
-            
+
             const res2 = await studyMaterialService.getRequestReports();
             if (res2.success) {
                 const activeReqReports = res2.reports.filter((r: any) => r.status === 'pending');
@@ -134,8 +127,6 @@ export default function StudyMaterialsPage() {
         }
     };
 
-
-    // Actions
     const handleApproveMaterial = async (id: string) => {
         try {
             await studyMaterialService.approveMaterial(id);
@@ -222,9 +213,6 @@ export default function StudyMaterialsPage() {
         }
     };
 
-
-
-
     const handleUpdateWithdrawal = async (id: string, status: string) => {
         let comment = "";
         if (status === "rejected") {
@@ -285,7 +273,7 @@ export default function StudyMaterialsPage() {
 
         setUploading(true);
         const formData = new FormData();
-        
+
         selectedFiles.forEach((item) => {
             formData.append("files", item.file);
             formData.append("months", item.month);
@@ -318,7 +306,7 @@ export default function StudyMaterialsPage() {
 
     return (
         <div className="space-y-6">
-            {/* Tabs */}
+
             <div className="flex space-x-2 border-b border-white/10 pb-4 overflow-x-auto">
                 <button 
                     onClick={() => setActiveTab("pending")}
@@ -367,7 +355,6 @@ export default function StudyMaterialsPage() {
 
             {loading && <div className="flex justify-center py-8"><RefreshCw className="w-6 h-6 animate-spin text-primary" /></div>}
 
-            {/* Tab: Pending */}
             {!loading && activeTab === "pending" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {materials.length === 0 ? (
@@ -420,7 +407,6 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Tab: Withdrawals */}
             {!loading && activeTab === "withdrawals" && (
                 <div className="space-y-4">
                     {withdrawals.length === 0 ? (
@@ -471,10 +457,9 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Tab: Coupons */}
             {!loading && activeTab === "coupons" && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Create Form */}
+
                     <div className="lg:col-span-1 bg-[#121214] border border-white/5 rounded-xl p-5 space-y-4">
                         <h3 className="font-bold text-lg flex items-center gap-2"><Plus className="w-5 h-5 text-primary" /> Create Coupon</h3>
                         <form onSubmit={handleCreateCoupon} className="space-y-4">
@@ -500,7 +485,6 @@ export default function StudyMaterialsPage() {
                         </form>
                     </div>
 
-                    {/* List */}
                     <div className="lg:col-span-2 space-y-4">
                         {coupons.length === 0 ? (
                             <p className="text-muted-foreground">No coupons found.</p>
@@ -530,7 +514,6 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Tab: Requests */}
             {!loading && activeTab === "requests" && (
                 <div className="space-y-4">
                     {requests.length === 0 ? (
@@ -598,7 +581,6 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Tab: Earnings Summary */}
             {!loading && activeTab === "earnings" && (
                 <div className="space-y-4">
                     {earningsData.length === 0 ? (
@@ -634,10 +616,9 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Tab: Reports */}
             {!loading && activeTab === "reports" && (
                 <div className="space-y-8">
-                    {/* Material Reports Section */}
+
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold flex items-center gap-2 px-1">
                             <FileText className="w-5 h-5 text-primary" />
@@ -671,7 +652,7 @@ export default function StudyMaterialsPage() {
                                             <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
                                                 <p><span className="text-white/60">Code:</span> <span className="text-white">{r.materialId.subjectCode}</span></p>
                                                 <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.materialId.type}</span></p>
-                                                
+
                                                 <div className="flex space-x-2 pt-2">
                                                     <button onClick={() => {
                                                         let token = "";
@@ -711,7 +692,7 @@ export default function StudyMaterialsPage() {
                                                 )}
                                             </div>
                                         )}
-                                        
+
                                         {!r.materialId && (
                                             <p className="text-xs text-white/30 italic">The associated material has already been deleted.</p>
                                         )}
@@ -721,7 +702,6 @@ export default function StudyMaterialsPage() {
                         )}
                     </div>
 
-                    {/* Request Reports Section */}
                     <div className="space-y-4 pt-8 border-t border-white/5">
                         <h3 className="text-xl font-bold flex items-center gap-2 px-1">
                             <RefreshCw className="w-5 h-5 text-primary" />
@@ -755,7 +735,7 @@ export default function StudyMaterialsPage() {
                                             <div className="space-y-2 text-sm text-muted-foreground border-t border-white/5 pt-3">
                                                 <p><span className="text-white/60">Subject Code:</span> <span className="text-white font-mono">{r.requestId.subjectCode}</span></p>
                                                 <p><span className="text-white/60">Type:</span> <span className="text-white uppercase">{r.requestId.type}</span></p>
-                                                
+
                                                 <div className="flex space-x-2 pt-2">
                                                     {r.status === 'pending' && (
                                                         <>
@@ -785,7 +765,7 @@ export default function StudyMaterialsPage() {
                                                 </div>
                                             </div>
                                         )}
-                                        
+
                                         {!r.requestId && (
                                             <p className="text-xs text-white/30 italic">The associated request has already been handled.</p>
                                         )}
@@ -797,8 +777,6 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-
-            {/* Tab: Direct Upload */}
             {!loading && activeTab === "upload" && (
                 <div className="max-w-2xl mx-auto bg-[#121214] border border-white/5 rounded-xl p-6 space-y-6">
                     <div>
@@ -850,7 +828,7 @@ export default function StudyMaterialsPage() {
 
                         <div className="space-y-4">
                             <label className="text-sm text-white/60 block mb-1">Documents (PDF • Max 10)</label>
-                            
+
                             {selectedFiles.length > 0 && (
                                 <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto no-scrollbar pr-1">
                                     {selectedFiles.map((item, idx) => (
@@ -948,7 +926,6 @@ export default function StudyMaterialsPage() {
                 </div>
             )}
 
-            {/* Edit Modal */}
             {editingMaterial && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
                     <div className="bg-[#121214] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
@@ -958,7 +935,7 @@ export default function StudyMaterialsPage() {
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        
+
                         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-white/40 uppercase tracking-wider">Subject Name</label>
@@ -1072,4 +1049,3 @@ export default function StudyMaterialsPage() {
         </div>
     );
 }
-

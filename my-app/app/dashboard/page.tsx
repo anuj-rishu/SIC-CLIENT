@@ -39,12 +39,9 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-
-
   const getDashboardStats = () => {
     if (!taskStats) return [];
-    
-    // Efficiency calculation (Completed / Total)
+
     const efficiency = taskStats.total > 0 
       ? Math.round((taskStats.completed / taskStats.total) * 100) 
       : 0;
@@ -116,7 +113,7 @@ export default function DashboardPage() {
               <h3 className="text-muted-foreground/40 text-[7px] md:text-[8px] font-black uppercase tracking-widest leading-none">{stat.name.split(' ')[0]}</h3>
               <div className={`w-1 h-1 rounded-full ${stat.color} opacity-30`} />
             </div>
-            
+
             <div className="flex flex-col">
               <p className="text-xl md:text-2xl font-black text-white tracking-tighter leading-none">{stat.value}</p>
             </div>
@@ -126,7 +123,7 @@ export default function DashboardPage() {
 
       {leaderboardData && (
         <div className="space-y-6">
-          {/* Strategic Leads Section */}
+
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-1">
               <Crown className="w-4 h-4 text-yellow-500" />
@@ -165,7 +162,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Strategic Associates Section */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-1">
               <ShieldCheck className="w-4 h-4 text-primary" />
@@ -204,7 +200,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Member Leaderboard */}
           <div className="animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-300">
             <Leaderboard data={leaderboardData} />
           </div>

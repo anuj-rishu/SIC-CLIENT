@@ -1,7 +1,7 @@
 import apiClient from '../lib/api-client';
 
 export const interviewService = {
-  // Admin routes
+
   createSchedule: (data: any) => apiClient.post('/interview/schedule', data),
   getAllBookings: () => apiClient.get('/interview/admin/bookings'),
   evaluateBooking: (bookingId: string, data: any) => 
@@ -16,8 +16,6 @@ export const interviewService = {
   exportBookings: (ids: string[]) => 
     apiClient.post('/interview/admin/bookings/export', { ids }, { responseType: 'blob' }),
 
-
-  // Student/General routes
   getAvailableSlots: () => apiClient.get('/interview/slots'),
   bookSlot: (data: any) => apiClient.post('/interview/book', data),
   getMyBookings: () => apiClient.get('/interview/my-bookings'),

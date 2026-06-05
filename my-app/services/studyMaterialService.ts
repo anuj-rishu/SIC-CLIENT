@@ -92,5 +92,3 @@ export const studyMaterialService = {
         return response.data;
     }
 };
-
-

@@ -7,7 +7,7 @@
   --card-foreground: #fafafa;
   --popover: #09090b;
   --popover-foreground: #fafafa;
-  --primary: #3b82f6; /* Changed from purple to Blue */
+  --primary: #3b82f6; 
   --primary-foreground: #fafafa;
   --secondary: #27272a;
   --secondary-foreground: #fafafa;
@@ -53,7 +53,6 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Custom Glows */
 .brand-glow {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
 }
@@ -65,16 +64,14 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* Hide Scrollbars Globally */
 ::-webkit-scrollbar {
   display: none;
 }
 * {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
 }
 
-/* no-scrollbar utility for specific cases */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -83,8 +80,6 @@ body {
   scrollbar-width: none;
 }
 
-
-/* Custom Date/Time Picker Styling */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1) brightness(0.8) sepia(100%) saturate(10000%) hue-rotate(180deg);
@@ -103,14 +98,12 @@ input[type="time"] {
   color-scheme: dark;
 }
 
-/* Glassmorphism for personnel selection */
 .glass-selection {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Sleek custom scrollbar utility */
 .custom-scrollbar::-webkit-scrollbar {
   display: block !important;
   width: 6px !important;
@@ -132,4 +125,3 @@ input[type="time"] {
   scrollbar-width: thin !important;
   scrollbar-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.03) !important;
 }
-

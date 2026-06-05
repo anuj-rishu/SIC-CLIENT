@@ -27,7 +27,7 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       const target = isExec 
         ? profile.domain.role.charAt(0).toUpperCase() + profile.domain.role.slice(1).toLowerCase() 
         : profile?.domain?.name || 'Squad';
-      
+
       return { 
         title: 'Team Workflow', 
         desc: `Monitor tasks for ${target}` 
@@ -64,7 +64,6 @@ export function Header({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
            <p className="text-[9px] md:text-[10px] text-muted-foreground/40 font-bold uppercase tracking-tighter mt-0.5">{desc}</p>
         </div>
       </div>
-
 
       <div className="flex items-center gap-5">
         <RefreshButton />

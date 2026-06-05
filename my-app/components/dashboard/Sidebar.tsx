@@ -55,7 +55,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
 
   return (
     <>
-      {/* Backdrop for mobile */}
+
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45] lg:hidden transition-opacity duration-300"
@@ -66,7 +66,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
       <div className={`w-72 h-[100dvh] bg-[#09090b] border-r border-white/5 flex flex-col fixed left-0 top-0 z-50 transition-all duration-300 ${
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        {/* Header - Fixed */}
+
         <div className="p-6 lg:p-8 flex-shrink-0">
           <div className="flex items-center justify-between mb-8 lg:mb-12">
             <div className="flex items-center gap-3">
@@ -84,7 +84,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
           </div>
         </div>
 
-        {/* Navigation - Scrollable */}
         <div className="flex-1 overflow-y-auto px-4 lg:px-8 pb-4 custom-scrollbar">
           <div className="space-y-1 mb-10">
             <p className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] px-4 mb-4">Core Navigation</p>
@@ -92,7 +91,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
               {menuItems.map((item) => {
                 const isActive = pathname === item.path;
                 const Icon = item.icon;
-                
+
                 return (
                   <Link 
                     key={item.name} 
@@ -120,7 +119,6 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
           </div>
         </div>
 
-        {/* Footer - Fixed */}
         <div className="mt-auto p-4 lg:p-6 space-y-4 border-t border-white/5 bg-[#09090b]/80 backdrop-blur-md">
           <button 
             onClick={handleLogout}
@@ -134,4 +132,3 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
     </>
   );
 }
-

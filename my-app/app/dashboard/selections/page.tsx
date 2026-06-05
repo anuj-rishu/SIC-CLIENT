@@ -26,7 +26,6 @@ export default function SelectionsPage() {
   const [isLoadingList, setIsLoadingList] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filters state
   const [domainFilter, setDomainFilter] = useState("All");
   const [yearFilter, setYearFilter] = useState("All");
   const [resultFilter, setResultFilter] = useState("All");
@@ -52,7 +51,6 @@ export default function SelectionsPage() {
       console.error("Failed to load distinct years", err);
     }
   };
-
 
   const fetchSelections = async () => {
     try {
@@ -151,7 +149,7 @@ export default function SelectionsPage() {
       + "Student Name,Student Email,Domain,Date,Time Slot,Status,Panel,Result,Rating,Evaluator,Year of Selection\n"
       + "John Doe,johndoe@srmist.edu.in,Web Dev,2026-06-04,10:00 AM - 10:30 AM,Completed,Panel 1,SELECTED,9,Jane Evaluator,26\n"
       + "Jane Smith,janesmith@srmist.edu.in,AIML,2026-06-04,11:00 AM - 11:30 AM,Completed,Panel 2,REJECTED,4,Bob Evaluator,26";
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -163,11 +161,10 @@ export default function SelectionsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
-      
-      {/* CSV Import card */}
+
       <div className="bg-card/25 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-        
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-primary/10 rounded-2xl">
@@ -234,11 +231,9 @@ export default function SelectionsPage() {
         </form>
       </div>
 
-      {/* Selections List */}
       <div className="bg-card/25 backdrop-blur-3xl border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden group max-w-full">
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-        
-        {/* Tab switcher */}
+
         <div className="flex bg-white/5 p-1 rounded-xl w-fit mb-6">
           <button
             type="button"

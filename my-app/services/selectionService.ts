@@ -12,4 +12,3 @@ export const selectionService = {
   getDistinctYears: () => apiClient.get('/selection/years'),
   getMyStatus: () => apiClient.get('/selection/my-status'),
 };
-

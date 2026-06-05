@@ -21,12 +21,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await authService.login({ email, password });
       const { token } = response.data;
-      
-      setCookie('token', token, { maxAge: 60 * 60 * 24 * 30 }); // 30 days
+
+      setCookie('token', token, { maxAge: 60 * 60 * 24 * 30 }); 
       window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.response?.data?.msg || 'Invalid credentials');
@@ -38,17 +38,17 @@ export default function LoginPage() {
   const handlePasskeyLogin = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
-      // Allow discoverable login if no email is entered
+
       const optRes = await authService.generatePasskeyLoginOptions(email || undefined);
       const { options, challengeId } = optRes.data;
 
       const authResp = await startAuthentication(options);
-      
+
       const verRes = await authService.verifyPasskeyLogin(authResp, email || undefined, challengeId);
       const { token } = verRes.data;
-      
+
       setCookie('token', token, { maxAge: 60 * 60 * 24 * 30 });
       window.location.href = '/dashboard';
     } catch (err: any) {
@@ -64,7 +64,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     setSuccess('');
-    
+
     try {
       await authService.forgotPassword(email);
       setSuccess('OTP has been sent to your email');
@@ -80,7 +80,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       await authService.resetPassword({ email, otp, newPassword });
       setSuccess('Password reset successful. You can now login.');
@@ -95,11 +95,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Dynamic Background Elements */}
+
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[140px]"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/5 rounded-full blur-[140px]"></div>
-      
-      {/* Grid Pattern Overlay */}
+
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
@@ -118,9 +117,9 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] relative group overflow-hidden">
-          {/* Subtle top light effect */}
+
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
-          
+
           {view === 'login' && (
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-7">
               {error && (
@@ -186,7 +185,7 @@ export default function LoginPage() {
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full"></div>
               </button>
-              
+
               <div className="relative flex items-center py-2">
                 <div className="flex-grow border-t border-white/5"></div>
                 <span className="flex-shrink-0 mx-4 text-muted-foreground/30 text-[9px] uppercase tracking-widest font-black">or utilize</span>
@@ -277,7 +276,7 @@ export default function LoginPage() {
                   {success}
                 </div>
               )}
-              
+
               <div className="space-y-4">
                 <div className="space-y-4">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.1em] ml-1">Verification OTP</label>
@@ -335,8 +334,7 @@ export default function LoginPage() {
 
         </div>
       </div>
-      
-      
+
     </div>
   );
 }

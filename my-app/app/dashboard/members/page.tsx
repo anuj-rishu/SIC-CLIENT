@@ -180,11 +180,9 @@ export default function MembersPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-4">
 
-
-      {/* Stats */}
       <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-2xl no-scrollbar">
         <div className="grid grid-cols-3">
-          {/* Total */}
+
           <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
             <div className="hidden md:flex w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
               <Users className="w-5 h-5 text-primary" />
@@ -194,7 +192,7 @@ export default function MembersPage() {
               <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Total</p>
             </div>
           </div>
-          {/* Active */}
+
           <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
             <div className="hidden md:flex w-10 h-10 rounded-xl bg-green-500/10 items-center justify-center">
               <Activity className="w-5 h-5 text-green-500" />
@@ -204,7 +202,7 @@ export default function MembersPage() {
               <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Active</p>
             </div>
           </div>
-          {/* Inactive */}
+
           <div className="p-4 md:p-7 flex items-center gap-3">
             <div className="hidden md:flex w-10 h-10 rounded-xl bg-red-500/10 items-center justify-center">
               <UserX className="w-5 h-5 text-red-500" />
@@ -217,9 +215,8 @@ export default function MembersPage() {
         </div>
       </div>
 
-      {/* Filters Bar */}
       <div className="bg-card/30 border border-white/5 rounded-2xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-        {/* Status Tabs */}
+
         <div className="flex bg-white/5 p-1 rounded-xl">
           {["All", "Active", "Inactive"].map((f) => (
             <button
@@ -239,7 +236,7 @@ export default function MembersPage() {
         <div className="hidden lg:block w-px h-8 bg-white/10"></div>
 
         <div className="grid grid-cols-2 lg:flex items-center gap-3">
-          {/* Role Dropdown */}
+
           <div className="relative w-full lg:w-auto">
             <select
               value={roleFilter}
@@ -252,7 +249,6 @@ export default function MembersPage() {
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/30 pointer-events-none" />
           </div>
 
-          {/* Domain Dropdown */}
           <div className="relative w-full lg:w-auto">
             <select
               value={domainFilter}
@@ -268,7 +264,6 @@ export default function MembersPage() {
 
         <div className="flex-1"></div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
           <input
@@ -288,7 +283,6 @@ export default function MembersPage() {
         </button>
       </div>
 
-      {/* Members Table */}
       <div className="bg-card/30 border border-white/5 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full">
@@ -308,7 +302,7 @@ export default function MembersPage() {
                     key={member._id}
                     className="border-b border-white/[0.03] hover:bg-white/[0.015] transition-colors group"
                   >
-                    {/* Member Info */}
+
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3.5">
                         <div className="relative">
@@ -328,7 +322,6 @@ export default function MembersPage() {
                       </div>
                     </td>
 
-                    {/* Role & Domain */}
                     <td className="px-6 py-4">
                       <div className="space-y-1.5">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getRoleBadge(member.domain?.role)}`}>
@@ -338,7 +331,6 @@ export default function MembersPage() {
                       </div>
                     </td>
 
-                    {/* Status */}
                     <td className="px-6 py-4">
                       {member.isActive ? (
                         <div className="flex items-center gap-1.5">
@@ -358,7 +350,6 @@ export default function MembersPage() {
                       )}
                     </td>
 
-                    {/* Toggle */}
                     <td className="px-6 py-4">
                       <div className="flex justify-center">
                         <button
@@ -379,7 +370,6 @@ export default function MembersPage() {
                       </div>
                     </td>
 
-                    {/* Actions */}
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <div className="relative">
@@ -416,7 +406,6 @@ export default function MembersPage() {
           </table>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between">
             <p className="text-xs text-muted-foreground/40">
@@ -458,7 +447,6 @@ export default function MembersPage() {
         )}
       </div>
 
-      {/* Add Member Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-8 w-full max-w-md relative shadow-2xl animate-in zoom-in-95 duration-300">

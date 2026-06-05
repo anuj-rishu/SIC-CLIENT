@@ -32,14 +32,13 @@ export function usePWA() {
       setCanInstall(false);
       setIsStandalone(true);
       localStorage.setItem("pwa_prompt_seen", "true");
-      // Optionally notify the user
+
       toast.success("SIC CONSOLE installed successfully!");
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
 
-    // For iOS, we can always "install" via manual instructions if not standalone
     if (isIOS && !checkStandalone) {
       setCanInstall(true);
     }
@@ -57,7 +56,7 @@ export function usePWA() {
     }
 
     if (platform === "ios") {
-      // For iOS, we just tell them how to do it if they click a button manually
+
       toast("To install: Tap Share then 'Add to Home Screen'", {
         icon: '📱',
       });
@@ -71,7 +70,7 @@ export function usePWA() {
 
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     if (outcome === "accepted") {
       setDeferredPrompt(null);
       setCanInstall(false);

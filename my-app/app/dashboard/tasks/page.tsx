@@ -58,7 +58,6 @@ export default function TasksPage() {
 
   const DOMAINS = ["All", "Creatives", "Web Dev", "Cloud", "Corporate", "AIML", "APP DEV"];
 
-  // Assign Task Form State
   const [taskData, setTaskData] = useState<any>({
     title: "",
     description: "",
@@ -98,25 +97,22 @@ export default function TasksPage() {
       try {
         await fetchStats();
       } finally {
-        // We don't set initialLoading false here yet, 
-        // because we want to wait for the profile observer to finish his first run
+
       }
     };
     initialize();
   }, []);
 
-  // Separate effect to handle profile-dependent initialization
   useEffect(() => {
     if (profile) {
       if (isHighLevelAdmin(profile.domain?.role)) {
         setActiveTab("Org Tracking");
       }
-      
+
       if (isAssignableRole) {
         fetchAssignableMembers();
       }
-      
-      // Once profile is here and we've set the tab, we can do the first fetch
+
       const firstFetch = async () => {
         try {
           if (isHighLevelAdmin(profile.domain?.role)) {
@@ -128,7 +124,7 @@ export default function TasksPage() {
           setInitialLoading(false);
         }
       };
-      
+
       if (initialLoading) {
         firstFetch();
       }
@@ -245,11 +241,9 @@ export default function TasksPage() {
       formData.append("description", taskData.description);
       formData.append("priority", taskData.priority);
       formData.append("deadline", taskData.deadline);
-      
+
       if (editingTaskId) {
-        // updateTask might not handle FormData yet if it's just a simple PUT, 
-        // but let's keep it consistent if we want files in update too.
-        // For now, simple update as before unless files are added.
+
         if (selectedFiles.length > 0) {
           selectedFiles.forEach(file => formData.append("files", file));
           await taskService.updateTask(editingTaskId, formData);
@@ -295,7 +289,7 @@ export default function TasksPage() {
         } catch (err: any) {
           toast.error(err.response?.data?.msg || "Failed to delete task");
         } finally {
-          setActionLoading(true); // Should probably be false but checking original
+          setActionLoading(true); 
           setActionLoading(false);
           setConfirmState(prev => ({ ...prev, isOpen: false }));
         }
@@ -323,7 +317,7 @@ export default function TasksPage() {
 
   const submitTask = async () => {
     if (!submissionTaskId) return;
-    
+
     if (!submissionDescription.trim()) {
       toast.error("Please provide a submission note");
       return;
@@ -334,7 +328,7 @@ export default function TasksPage() {
       const formData = new FormData();
       formData.append("submissionDescription", submissionDescription);
       submissionFiles.forEach(file => formData.append("files", file));
-      
+
       await taskService.markTaskDone(submissionTaskId, formData);
       toast.success("Task submitted for review!");
       setShowSubmissionModal(false);
@@ -357,7 +351,7 @@ export default function TasksPage() {
 
   const confirmApproval = async () => {
     if (!ratingTaskId) return;
-    
+
     if (!approvalFeedback.trim()) {
       toast.error("Please provide feedback for approval");
       return;
@@ -436,7 +430,6 @@ export default function TasksPage() {
     );
   }
 
-  // Utility to render text with clickable links
   const renderTextWithLinks = (text: string) => {
     if (!text) return null;
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -460,11 +453,11 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-6">
-      {/* Stats Cards */}
+
       {stats && (
         <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-2xl no-scrollbar">
           <div className="grid grid-cols-2 lg:grid-cols-4">
-            {/* Total */}
+
             <div className="p-4 md:p-7 border-r border-b lg:border-b-0 border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-primary/10 items-center justify-center">
                 <ClipboardList className="w-5 h-5 text-primary" />
@@ -474,7 +467,7 @@ export default function TasksPage() {
                 <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Total</p>
               </div>
             </div>
-            {/* Pending Approval */}
+
             <div className="p-4 md:p-7 border-r border-b lg:border-b-0 border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-blue-500/10 items-center justify-center">
                 <AlertCircle className="w-5 h-5 text-blue-400" />
@@ -484,7 +477,7 @@ export default function TasksPage() {
                 <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Pending</p>
               </div>
             </div>
-            {/* Completed */}
+
             <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-3">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-emerald-500/10 items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -494,7 +487,7 @@ export default function TasksPage() {
                 <p className="text-[10px] md:text-xs text-muted-foreground/50 uppercase tracking-wider mt-1.5 font-black">Finished</p>
               </div>
             </div>
-            {/* Performance Score */}
+
             <div className="p-4 md:p-7 flex items-center gap-3 bg-gradient-to-br from-yellow-500/5 to-transparent">
               <div className="hidden md:flex w-10 h-10 rounded-xl bg-yellow-500/10 items-center justify-center">
                 <Trophy className="w-5 h-5 text-yellow-500" />
@@ -511,9 +504,8 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Unified Filter Suite */}
       <div className="space-y-4 md:space-y-6 animate-in slide-in-from-top duration-700 bg-white/[0.02] border border-white/5 p-4 md:p-6 rounded-2xl md:rounded-[2.5rem] backdrop-blur-3xl">
-        {/* Action Row: Tabs & Assign */}
+
         {(isAssignableRole || isHighLevelAdmin(profile?.domain?.role)) && (
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/5 pb-3 mb-1">
             <div className="flex items-center gap-3">
@@ -569,7 +561,7 @@ export default function TasksPage() {
           </div>
         )}
          <div className={`grid grid-cols-2 md:grid-cols-2 ${activeTab === "Org Tracking" ? "xl:grid-cols-4" : "xl:grid-cols-3"} gap-3 md:gap-6`}>
-            {/* Squad/Domain Filter - Only for Org Tracking */}
+
             {activeTab === "Org Tracking" && (
               <div className="space-y-1.5 md:space-y-3">
                  <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Domain</span>
@@ -586,7 +578,6 @@ export default function TasksPage() {
               </div>
             )}
 
-            {/* Status Filter */}
             <div className="space-y-1.5 md:space-y-3">
                <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Status</span>
                <div className="relative">
@@ -608,7 +599,6 @@ export default function TasksPage() {
                </div>
             </div>
 
-            {/* Priority Filter */}
             <div className="space-y-1.5 md:space-y-3">
                <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Urgency</span>
                <div className="relative">
@@ -630,7 +620,6 @@ export default function TasksPage() {
                </div>
             </div>
 
-            {/* Search Bar */}
             <div className={`space-y-1.5 md:space-y-3 ${activeTab === "Org Tracking" ? "col-span-2 xl:col-span-1" : "col-span-2 xl:col-span-1"}`}>
                <span className="text-[7px] md:text-[10px] font-black text-muted-foreground/20 uppercase tracking-[0.2em] ml-1">Search</span>
                <div className="relative group">
@@ -647,7 +636,6 @@ export default function TasksPage() {
          </div>
       </div>
 
-      {/* Tasks Grid */}
       <div className="grid grid-cols-1 gap-3 md:gap-4">
         {tasks.length > 0 ? (
           tasks.map((task) => (
@@ -655,10 +643,9 @@ export default function TasksPage() {
               key={task._id} 
               className="bg-card/20 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-3xl p-4 md:p-5 hover:bg-card/30 transition-all group relative overflow-hidden flex flex-col md:flex-row gap-4 md:items-center"
             >
-               {/* Priority Left Trace */}
+
                <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(task.priority).split(" ")[1]} opacity-50`}></div>
 
-               {/* Leading Section: Status & Title */}
                <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover:border-primary/30 transition-all shadow-inner">
                      {getStatusIcon(task.status)}
@@ -681,8 +668,7 @@ export default function TasksPage() {
                           {task.description}
                         </p>
                      </div>
-                     
-                     {/* Attachments Preview */}
+
                      {(task.attachments?.length > 0 || task.submissionAttachments?.length > 0) && (
                         <div className="flex items-center gap-2 mt-2">
                            {task.attachments?.length > 0 && (
@@ -702,7 +688,6 @@ export default function TasksPage() {
                    </div>
                </div>
 
-               {/* Logistics Section */}
                <div className="grid grid-cols-3 md:flex md:items-center gap-2 md:gap-8 border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0 md:pl-8 flex-shrink-0">
                   <div className="space-y-0.5">
                       <p className="text-[7px] text-muted-foreground/20 uppercase font-black tracking-widest">Bound</p>
@@ -727,7 +712,6 @@ export default function TasksPage() {
                   </div>
                </div>
 
-               {/* Action Section */}
                <div className="flex items-center gap-2 border-t md:border-t-0 md:border-l border-white/5 pt-4 md:pt-0 md:pl-5 shrink-0">
                   <button 
                     onClick={() => { setDescTask(task); setShowDescModal(true); }}
@@ -775,7 +759,7 @@ export default function TasksPage() {
                                </button>
                              </>
                            )}
-                           
+
                            {(task.status === "UNDER_REVIEW" && (activeTab === "Team Management" || activeTab === "Org Tracking")) && (
                              <div className="flex items-center gap-2">
                                 <button 
@@ -828,7 +812,6 @@ export default function TasksPage() {
         )}
       </div>
 
-      {/* Unified Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 md:gap-4 py-6 md:py-8">
           <button
@@ -838,7 +821,7 @@ export default function TasksPage() {
           >
             <ChevronLeft className="w-4 md:w-5 h-4 md:h-5" />
           </button>
-          
+
           <div className="flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 bg-white/5 rounded-xl md:rounded-2xl border border-white/5">
             <span className="text-[8px] md:text-[10px] font-black text-primary uppercase tracking-[0.2em]">Page</span>
             <span className="text-sm md:text-lg font-black text-white">{pagination.currentPage}</span>
@@ -855,7 +838,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Submission Modal */}
       {showSubmissionModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2rem] w-full max-w-sm md:max-w-md h-full md:h-auto flex flex-col relative shadow-2xl overflow-hidden">
@@ -866,7 +848,7 @@ export default function TasksPage() {
                <div className="p-6 md:p-8 flex-1 flex flex-col justify-center">
                   <h2 className="text-lg md:text-xl font-bold text-white tracking-tight uppercase">Finish Task</h2>
                   <p className="text-[9px] md:text-[10px] text-muted-foreground/60 mt-1 uppercase font-bold tracking-widest leading-relaxed">Provide details regarding your progress</p>
-                  
+
                   <div className="mt-4 md:mt-6 space-y-4">
                     <div className="space-y-1.5">
                        <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Submission Note</label>
@@ -931,7 +913,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Assign Task Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2rem] w-full max-w-xl h-full md:h-auto flex flex-col md:max-h-[90vh] relative shadow-2xl overflow-hidden">
@@ -1094,7 +1075,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Rating Modal */}
       {showRatingModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-sm flex flex-col relative shadow-2xl overflow-hidden">
@@ -1108,7 +1088,7 @@ export default function TasksPage() {
                   </div>
                   <h2 className="text-xl font-bold text-white tracking-tight uppercase">Quality Assessment</h2>
                   <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-widest leading-relaxed">Rate the member's performance on this objective</p>
-                  
+
                   <div className="mt-8 flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -1159,7 +1139,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-sm flex flex-col relative shadow-2xl overflow-hidden">
@@ -1173,7 +1152,7 @@ export default function TasksPage() {
                   </div>
                   <h2 className="text-xl font-bold text-white tracking-tight uppercase">Action Required</h2>
                   <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase font-bold tracking-widest leading-relaxed">Provide instructions for correction</p>
-                  
+
                   <div className="w-full mt-8 space-y-1.5 text-left">
                     <label className="text-[9px] md:text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest ml-1">Rejection Reason / Feedback</label>
                     <textarea 
@@ -1206,7 +1185,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Description Modal */}
       {showDescModal && descTask && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-lg relative shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
@@ -1279,7 +1257,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      {/* Submission Description Modal */}
       {showSubDescModal && subDescTask && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-lg relative shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
@@ -1360,7 +1337,6 @@ export default function TasksPage() {
         confirmText="Delete Task"
       />
 
-      {/* File Preview Modal */}
       {previewFile && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
            <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] w-full max-w-5xl h-[85vh] relative shadow-2xl overflow-hidden flex flex-col">
@@ -1390,7 +1366,7 @@ export default function TasksPage() {
                     </button>
                  </div>
               </div>
-              
+
               <div className="flex-1 bg-black/20 flex items-center justify-center overflow-hidden">
                  {previewFile.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
                    <img 

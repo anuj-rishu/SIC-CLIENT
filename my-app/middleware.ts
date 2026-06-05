@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublicRoute = pathname === '/';
-  
+
   const isStaticFile = pathname.startsWith('/_next') || 
                        pathname.startsWith('/api') ||
                        pathname === '/favicon.ico' ||
@@ -17,9 +17,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  
   if (!token) {
- 
+
     if (!isPublicRoute) {
       return NextResponse.redirect(new URL('/', request.url));
     }

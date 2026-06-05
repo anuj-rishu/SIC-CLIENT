@@ -10,18 +10,14 @@ const apiClient = axios.create({
   },
 });
 
-// Map to store inflight promises for request deduplication
 const inflightRequests = new Map<string, Promise<any>>();
 
-// Cache original request method
 const originalRequest = apiClient.request.bind(apiClient);
 
-// Override request method for deduplication
 apiClient.request = function (config: any) {
   const method = config.method?.toUpperCase() || 'GET';
   const requestKey = `${method}:${config.url}`;
 
-  // Only deduplicate GET requests to avoid side-effect issues with POST/PUT/DELETE
   if (method === 'GET') {
     if (inflightRequests.has(requestKey)) {
       return inflightRequests.get(requestKey)!;
@@ -58,7 +54,6 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Pass through all other errors (429, 500, etc.)
     return Promise.reject(error);
   }
 );

@@ -47,7 +47,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
           <h3 className="text-lg md:text-xl font-black text-white tracking-tighter mb-0.5 md:mb-1">Elite Performance</h3>
           <p className="text-[7px] md:text-[9px] font-black text-muted-foreground/30 uppercase tracking-[0.2em] md:tracking-[0.3em]">Ranked by Strategic Action Output</p>
         </div>
-        
+
         <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 backdrop-blur-sm self-start sm:self-auto">
           <button 
             onClick={() => setActiveTab('members')}
@@ -105,13 +105,13 @@ export default function Leaderboard({ data }: LeaderboardProps) {
               key={member.id}
               className={`relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-500 hover:translate-x-1 ${getRankColor(index)} group overflow-hidden`}
             >
-              {/* Animated Background Glow on Hover */}
+
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
+
               <div className="flex items-center justify-center w-8 shrink-0 z-10">
                 {getRankIcon(index)}
               </div>
-              
+
               <div className="relative w-10 h-10 rounded-xl bg-white/5 border border-white/10 overflow-hidden flex-shrink-0 z-10 group-hover:border-primary/40 transition-colors">
                 {member.profilePhoto ? (
                   <img src={member.profilePhoto} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -121,7 +121,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                   </div>
                 )}
               </div>
-    
+
               <div className="flex-grow min-w-0 z-10">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
                   <h4 className="text-xs md:text-sm font-black text-white truncate">{member.name}</h4>
@@ -150,7 +150,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                   </div>
                 </div>
               </div>
-    
+
               <div className="hidden sm:flex flex-col items-end shrink-0 z-10">
                  <div className="h-1 w-16 bg-white/5 rounded-full overflow-hidden border border-white/5">
                     <div 
@@ -167,7 +167,7 @@ export default function Leaderboard({ data }: LeaderboardProps) {
               key={domain.name}
               className={`flex flex-col gap-3 p-4 md:p-5 rounded-2xl border transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 ${getRankColor(index)} relative overflow-hidden group`}
             >
-              {/* Domain Header - Compact but Readable */}
+
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/40 transition-all shadow-inner shrink-0">
@@ -193,7 +193,6 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                 </div>
               </div>
 
-              {/* Consolidated Stats Row - Refined */}
               <div className="flex items-center justify-between gap-3 relative z-10 bg-white/5 rounded-xl p-3 border border-white/5 group-hover:bg-white/[0.07] transition-all duration-300">
                 <div className="flex flex-col">
                    <p className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-[0.2em] mb-1">Squad Output</p>
@@ -206,7 +205,6 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                 </div>
               </div>
 
-              {/* Roster Section - Compact but Clear */}
               {domain.topMembers && domain.topMembers.length > 0 && (
                 <div className="flex flex-col gap-2.5 relative z-10 bg-black/20 rounded-xl p-3.5 border border-white/5">
                   <div className="flex items-center justify-between px-0.5">
@@ -238,7 +236,6 @@ export default function Leaderboard({ data }: LeaderboardProps) {
                 </div>
               )}
 
-              {/* Progress Bar - Readable Ranking */}
               <div className="space-y-1.5 relative z-10">
                 <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-muted-foreground/30">
                   <span>Power Ranking</span>

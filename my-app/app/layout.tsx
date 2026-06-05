@@ -45,7 +45,7 @@ export default function RootLayout({
       >
         <Toaster position="top-center" toastOptions={{
           style: {
-            background: '#18181b', // zinc-900 / card
+            background: '#18181b', 
             color: '#fff',
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '16px',
@@ -54,13 +54,13 @@ export default function RootLayout({
           },
           success: {
             iconTheme: {
-              primary: '#10b981', // emerald-500
+              primary: '#10b981', 
               secondary: '#fff',
             },
           },
           error: {
             iconTheme: {
-              primary: '#f43f5e', // rose-500
+              primary: '#f43f5e', 
               secondary: '#fff',
             },
           },

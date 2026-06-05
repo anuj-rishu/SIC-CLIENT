@@ -30,7 +30,6 @@ import { memberService } from "@/services/memberService";
 import { authService } from "@/services/authService";
 import toast from "react-hot-toast";
 
-// ─── Types ───
 interface SentryIssue {
   _id: string;
   sentryId: string;
@@ -72,7 +71,6 @@ interface Stats {
   };
 }
 
-// ─── Helpers ───
 function timeAgo(dateStr: string) {
   const seconds = Math.floor(
     (Date.now() - new Date(dateStr).getTime()) / 1000
@@ -129,9 +127,6 @@ function getLevelConfig(level: string) {
   }
 }
 
-// ═══════════════════════════════════════════
-// Main Page Component
-// ═══════════════════════════════════════════
 export default function SentryLogsPage() {
   const [issues, setIssues] = useState<SentryIssue[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -140,23 +135,19 @@ export default function SentryLogsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("unresolved");
   const [projectFilter, setProjectFilter] = useState("");
 
-  // Pagination
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [prevCursor, setPrevCursor] = useState<string | null>(null);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
 
-  // Detail Panel
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailData, setDetailData] = useState<any>(null);
 
-  // Assign Modal
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [assignIssueId, setAssignIssueId] = useState<string>("");
   const [members, setMembers] = useState<any[]>([]);
@@ -169,7 +160,6 @@ export default function SentryLogsPage() {
   const [assigning, setAssigning] = useState(false);
   const [domainFilter, setDomainFilter] = useState("All");
 
-  // ─── Fetch Profile ───
   const fetchProfile = useCallback(async () => {
     try {
       const res = await authService.getProfile();
@@ -179,7 +169,6 @@ export default function SentryLogsPage() {
     }
   }, []);
 
-  // ─── Fetch Projects ───
   const fetchProjects = useCallback(async () => {
     try {
       const res = await sentryService.getProjects();
@@ -189,7 +178,6 @@ export default function SentryLogsPage() {
     }
   }, []);
 
-  // ─── Fetch Issues ───
   const fetchIssues = useCallback(
     async (cursor?: string) => {
       try {
@@ -215,7 +203,6 @@ export default function SentryLogsPage() {
     [searchQuery, levelFilter, statusFilter, projectFilter]
   );
 
-  // ─── Fetch Stats ───
   const fetchStats = useCallback(async () => {
     try {
       const res = await sentryService.getStats(projectFilter ? { project: projectFilter } : undefined);
@@ -235,7 +222,6 @@ export default function SentryLogsPage() {
     fetchStats();
   }, [fetchIssues, fetchStats]);
 
-  // ─── Refresh ───
   const handleRefresh = async () => {
     setRefreshing(true);
     await Promise.all([fetchProfile(), fetchProjects(), fetchIssues(), fetchStats()]);
@@ -243,7 +229,6 @@ export default function SentryLogsPage() {
     toast.success("Refreshed");
   };
 
-  // ─── Pagination ───
   const goNext = () => {
     if (nextCursor) {
       setCursorStack((prev) => [...prev, nextCursor]);
@@ -260,7 +245,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Open Detail Panel ───
   const openDetail = async (issue: SentryIssue) => {
     setSelectedIssue(issue);
     setDetailLoading(true);
@@ -274,7 +258,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Open Assign Modal ───
   const openAssignModal = async (sentryId: string) => {
     setAssignIssueId(sentryId);
     setAssignModalOpen(true);
@@ -284,17 +267,17 @@ export default function SentryLogsPage() {
     try {
       const res = await memberService.getAllMembers();
       const allMembers = res.data || [];
-      
+
       const userRole = profile?.domain?.role?.toUpperCase();
       const userDomain = profile?.domain?.name;
 
       let allowedMembers = allMembers;
 
       if (["LEAD", "ASSOCIATE"].includes(userRole)) {
-        // Leads/Associates: only members in their own team (domain name matches)
+
         allowedMembers = allMembers.filter((m: any) => m.domain?.name === userDomain);
       } else if (["FOUNDER", "PRESIDENT", "VICE PRESIDENT", "TECHNICAL DIRECTOR"].includes(userRole)) {
-        // Founders/Presidents/VPs/TDs: can assign to any LEAD and ASSOCIATE
+
         allowedMembers = allMembers.filter((m: any) => ["LEAD", "ASSOCIATE"].includes(m.domain?.role?.toUpperCase()));
       } else {
         allowedMembers = [];
@@ -306,7 +289,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Submit Assignment ───
   const handleAssign = async () => {
     if (!assignForm.assignedTo) {
       toast.error("Select a member to assign");
@@ -325,7 +307,6 @@ export default function SentryLogsPage() {
       fetchIssues();
       fetchStats();
 
-      // Refresh detail data if currently viewing
       if (selectedIssue && selectedIssue.sentryId === assignIssueId) {
         const detailRes = await sentryService.getIssueDetail(assignIssueId);
         setDetailData(detailRes.data);
@@ -338,7 +319,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Undo Assignment ───
   const handleUndoAssignment = async (sentryId: string) => {
     if (!confirm("Are you sure you want to undo assignment for this error? This will delete all associated tasks.")) return;
     try {
@@ -356,7 +336,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Remove Specific Member ───
   const handleRemoveMember = async (sentryId: string, userId: string, userName: string) => {
     if (!confirm(`Are you sure you want to remove ${userName} from this assignment?`)) return;
     try {
@@ -374,7 +353,6 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Resolve Issue ───
   const handleResolve = async (sentryId: string) => {
     try {
       await sentryService.resolveIssue(sentryId);
@@ -390,10 +368,9 @@ export default function SentryLogsPage() {
     }
   };
 
-  // ─── Copy Error Details ───
   const handleCopyError = () => {
     if (!selectedIssue) return;
-    
+
     let errorText = `Error: ${selectedIssue.title}\n` +
       `Location: ${selectedIssue.culprit || "Unknown"}\n` +
       `Project: ${selectedIssue.projectName || selectedIssue.projectSlug || "Unknown"}\n` +
@@ -405,7 +382,7 @@ export default function SentryLogsPage() {
       const exc = exception.data.values[0];
       errorText += `\n\nException Details:\n${exc.type}: ${exc.value}`;
       if (exc.stacktrace?.frames) {
-        const frames = exc.stacktrace.frames.slice(-5); // Get last 5 frames
+        const frames = exc.stacktrace.frames.slice(-5); 
         errorText += `\n\nStacktrace (Last 5 frames):\n` +
           frames.map((f: any) => `  at ${f.function || "anonymous"} (${f.filename || f.absPath}:${f.lineNo || "?"})`).join("\n");
       }
@@ -415,7 +392,6 @@ export default function SentryLogsPage() {
     toast.success("Error details copied to clipboard!");
   };
 
-  // ─── Get unique domains from members ───
   const domains = Array.from(
     new Set(members.map((m: any) => m.domain?.name).filter(Boolean))
   );
@@ -425,9 +401,6 @@ export default function SentryLogsPage() {
       ? members
       : members.filter((m: any) => m.domain?.name === domainFilter);
 
-  // ═══════════════════════════════════════════
-  // RENDER
-  // ═══════════════════════════════════════════
   if (loading && issues.length === 0) {
     return (
       <div className="h-[60vh] flex items-center justify-center">
@@ -443,7 +416,7 @@ export default function SentryLogsPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-700">
-      {/* ── Header ── */}
+
       <div className="flex items-center justify-end">
         <button
           onClick={handleRefresh}
@@ -457,7 +430,6 @@ export default function SentryLogsPage() {
         </button>
       </div>
 
-      {/* ── Stats Bar ── */}
       {stats && (
         <div className="flex bg-white/[0.02] border border-white/5 rounded-2xl md:rounded-[1.5rem] overflow-hidden backdrop-blur-xl">
           {[
@@ -508,9 +480,8 @@ export default function SentryLogsPage() {
         </div>
       )}
 
-      {/* ── Filters ── */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Search */}
+
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
           <input
@@ -523,7 +494,6 @@ export default function SentryLogsPage() {
           />
         </div>
 
-        {/* Level Filter */}
         <select
           value={levelFilter}
           onChange={(e) => setLevelFilter(e.target.value)}
@@ -535,7 +505,6 @@ export default function SentryLogsPage() {
           <option value="warning" className="bg-[#121214]">Warning</option>
         </select>
 
-        {/* Status Filter */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -547,7 +516,6 @@ export default function SentryLogsPage() {
           <option value="" className="bg-[#121214]">All Status</option>
         </select>
 
-        {/* Project Filter */}
         <select
           value={projectFilter}
           onChange={(e) => setProjectFilter(e.target.value)}
@@ -569,7 +537,6 @@ export default function SentryLogsPage() {
         </button>
       </div>
 
-      {/* ── Issues List ── */}
       <div className="space-y-2">
         {issues.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -598,14 +565,13 @@ export default function SentryLogsPage() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {/* Level Badge */}
+
                   <div
                     className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${levelCfg.bg} border ${levelCfg.border}`}
                   >
                     <LevelIcon className={`w-4 h-4 ${levelCfg.color}`} />
                   </div>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm font-bold text-white truncate flex-1">
@@ -642,7 +608,6 @@ export default function SentryLogsPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={(e) => {
@@ -689,7 +654,6 @@ export default function SentryLogsPage() {
                   </div>
                 </div>
 
-                {/* Assignment Info */}
                 {((issue.assignedTasks && issue.assignedTasks.length > 0) || issue.assignedTask) && (
                   <div className="mt-3 pt-3 border-t border-white/5 space-y-1.5">
                     {issue.assignedTasks && issue.assignedTasks.length > 0 ? (
@@ -747,7 +711,6 @@ export default function SentryLogsPage() {
         )}
       </div>
 
-      {/* ── Pagination ── */}
       {(nextCursor || cursorStack.length > 0) && (
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
@@ -769,9 +732,6 @@ export default function SentryLogsPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════
-           Detail Slide-Over Panel
-         ═══════════════════════════════════════════ */}
       {selectedIssue && (
         <>
           <div
@@ -782,7 +742,7 @@ export default function SentryLogsPage() {
             }}
           />
           <div className="fixed right-0 top-0 h-full w-full md:w-[600px] lg:w-[700px] bg-[#0a0a0c] border-l border-white/5 z-[61] overflow-y-auto">
-            {/* Panel Header */}
+
             <div className="sticky top-0 z-10 bg-[#0a0a0c]/95 backdrop-blur-xl border-b border-white/5 p-4 md:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -821,7 +781,6 @@ export default function SentryLogsPage() {
                 </button>
               </div>
 
-              {/* Quick Actions */}
               <div className="flex items-center gap-2 mt-4 flex-wrap">
                 <button
                   onClick={() => openAssignModal(selectedIssue.sentryId)}
@@ -871,7 +830,6 @@ export default function SentryLogsPage() {
               </div>
             </div>
 
-            {/* Panel Body */}
             <div className="p-4 md:p-6 space-y-6">
               {detailLoading ? (
                 <div className="flex items-center justify-center py-20">
@@ -879,7 +837,7 @@ export default function SentryLogsPage() {
                 </div>
               ) : detailData ? (
                 <>
-                  {/* Issue Metadata */}
+
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: "Project", value: selectedIssue.projectName || selectedIssue.projectSlug || "—", icon: Bug },
@@ -904,7 +862,6 @@ export default function SentryLogsPage() {
                     ))}
                   </div>
 
-                  {/* Assignment Status */}
                   {((detailData.issue?.assignedTasks && detailData.issue.assignedTasks.length > 0) || detailData.issue?.assignedTask) && (
                     <div className="bg-primary/5 border border-white/5 rounded-2xl p-4 space-y-3">
                       <div className="flex items-center gap-2 pb-2 border-b border-white/5">
@@ -913,7 +870,7 @@ export default function SentryLogsPage() {
                           Active Assignments ({detailData.issue?.assignedTasks?.length || 1})
                         </span>
                       </div>
-                      
+
                       <div className="space-y-2">
                         {detailData.issue?.assignedTasks && detailData.issue.assignedTasks.length > 0 ? (
                           detailData.issue.assignedTasks.map((task: any) => (
@@ -938,7 +895,7 @@ export default function SentryLogsPage() {
                                   Priority: {task.priority} · Deadline: {task.deadline ? new Date(task.deadline).toLocaleDateString() : "N/A"}
                                 </p>
                               </div>
-                              
+
                               <button
                                 onClick={() => handleRemoveMember(selectedIssue.sentryId, task.assignedTo?._id, task.assignedTo?.name || "")}
                                 className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors shrink-0"
@@ -970,7 +927,7 @@ export default function SentryLogsPage() {
                                 Priority: {detailData.issue.assignedTask.priority} · Deadline: {detailData.issue.assignedTask.deadline ? new Date(detailData.issue.assignedTask.deadline).toLocaleDateString() : "N/A"}
                               </p>
                             </div>
-                            
+
                             <button
                               onClick={() => handleRemoveMember(selectedIssue.sentryId, detailData.issue.assignedTask.assignedTo?._id, detailData.issue.assignedTask.assignedTo?.name || "")}
                               className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 transition-colors shrink-0"
@@ -984,7 +941,6 @@ export default function SentryLogsPage() {
                     </div>
                   )}
 
-                  {/* Tags */}
                   {detailData.issue?.tags?.length > 0 && (
                     <div>
                       <div className="flex items-center gap-1.5 mb-3">
@@ -1020,7 +976,6 @@ export default function SentryLogsPage() {
                     </div>
                   )}
 
-                  {/* Stacktrace */}
                   {detailData.latestEvent?.entries?.map(
                     (entry: any, idx: number) => {
                       if (entry.type === "exception") {
@@ -1159,7 +1114,6 @@ export default function SentryLogsPage() {
                     }
                   )}
 
-                  {/* Context Info */}
                   {detailData.latestEvent?.contexts && (
                     <div>
                       <div className="flex items-center gap-1.5 mb-3">
@@ -1218,9 +1172,6 @@ export default function SentryLogsPage() {
         </>
       )}
 
-      {/* ═══════════════════════════════════════════
-           Assign Modal
-         ═══════════════════════════════════════════ */}
       {assignModalOpen && (
         <>
           <div
@@ -1228,7 +1179,7 @@ export default function SentryLogsPage() {
             onClick={() => setAssignModalOpen(false)}
           />
           <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-[520px] bg-[#0e0e10] border border-white/5 rounded-2xl z-[71] shadow-2xl overflow-hidden">
-            {/* Modal Header */}
+
             <div className="px-6 py-5 border-b border-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -1253,9 +1204,8 @@ export default function SentryLogsPage() {
               </div>
             </div>
 
-            {/* Modal Body */}
             <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
-              {/* Domain Filter */}
+
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground/30 uppercase tracking-wider mb-2">
                   Filter by Domain
@@ -1287,7 +1237,6 @@ export default function SentryLogsPage() {
                 </div>
               </div>
 
-              {/* Member Selection */}
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground/30 uppercase tracking-wider mb-2">
                   Select Member
@@ -1340,7 +1289,6 @@ export default function SentryLogsPage() {
                 </div>
               </div>
 
-              {/* Priority */}
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground/30 uppercase tracking-wider mb-2">
                   Priority
@@ -1368,7 +1316,6 @@ export default function SentryLogsPage() {
                 </div>
               </div>
 
-              {/* Deadline */}
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground/30 uppercase tracking-wider mb-2">
                   Deadline
@@ -1383,7 +1330,6 @@ export default function SentryLogsPage() {
                 />
               </div>
 
-              {/* Description Override */}
               <div>
                 <label className="block text-[10px] font-black text-muted-foreground/30 uppercase tracking-wider mb-2">
                   Additional Notes{" "}
@@ -1404,7 +1350,6 @@ export default function SentryLogsPage() {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-white/5 flex items-center justify-end gap-3">
               <button
                 onClick={() => setAssignModalOpen(false)}

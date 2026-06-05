@@ -32,7 +32,6 @@ import ConfirmModal from "@/components/dashboard/ConfirmModal";
 import { useData } from "@/app/context/DataContext";
 import { usePWA } from "@/hooks/usePWA";
 
-
 export default function ProfilePage() {
   const { profile: contextProfile, refreshProfile } = useData();
   const { isStandalone, installApp } = usePWA();
@@ -49,13 +48,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Email Change State
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailOtp, setEmailOtp] = useState("");
   const [emailStep, setEmailStep] = useState(1);
 
-  // Password Change State
   const [showPassModal, setShowPassModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -83,7 +80,7 @@ export default function ProfilePage() {
   }, [contextProfile]);
 
   const fetchProfile = async () => {
-    // This now just refreshes the context
+
     await refreshProfile();
   };
 
@@ -169,7 +166,7 @@ export default function ProfilePage() {
       const options = res.data;
 
       const attResp = await startRegistration(options);
-      
+
       const verificationResp = await authService.verifyPasskeyRegister(attResp);
       if (verificationResp.data.msg === "Passkey registered successfully") {
         toast.success("Passkey registered. You can now login with it.");
@@ -205,7 +202,6 @@ export default function ProfilePage() {
     });
   };
 
-
   const getRoleColor = (role: string) => {
     const r = role?.toUpperCase();
     if (r === "FOUNDER") return "text-amber-400 bg-amber-500/10 border-amber-500/20";
@@ -224,10 +220,10 @@ export default function ProfilePage() {
 
   return (
     <div className="max-w-[1000px] mx-auto pb-4 animate-in fade-in duration-700">
-      {/* Top Banner Identity */}
+
       <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 mb-6 md:mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] opacity-20 -mr-32 -mt-32"></div>
-        
+
         <div className="flex flex-col md:flex-row items-center text-center md:text-left gap-4 md:gap-6 relative w-full">
           <div className="relative group/avatar">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-[1.5rem] md:rounded-2xl bg-white/[0.02] border border-white/10 p-1 flex items-center justify-center relative overflow-hidden group-hover/avatar:border-primary/50 transition-all duration-500">
@@ -276,9 +272,8 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Bento Layout Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Personal & Bio */}
+
         <section className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 space-y-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground">
@@ -324,7 +319,7 @@ export default function ProfilePage() {
         </section>
 
         <div className="space-y-8">
-          {/* Support Social Connections */}
+
           <section className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 space-y-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground">
@@ -355,7 +350,6 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          {/* Privacy Nodes */}
           <section className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 space-y-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground">
@@ -418,7 +412,7 @@ export default function ProfilePage() {
                    Register New
                  </button>
               </div>
-              
+
               {profile?.passkeys?.length > 0 ? (
                 <div className="space-y-2">
                   {profile.passkeys.map((pk: any) => (
@@ -449,7 +443,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Email Change Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 w-full max-w-md relative shadow-2xl">
@@ -473,7 +466,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Password Change Modal */}
       {showPassModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-8 w-full max-w-md relative shadow-2xl">

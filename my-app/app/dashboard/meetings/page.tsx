@@ -35,8 +35,6 @@ import { toast } from "react-hot-toast";
 import ConfirmModal from "@/components/dashboard/ConfirmModal";
 import { useData } from "@/app/context/DataContext";
 
-
-
 export default function MeetingsPage() {
   const { profile } = useData();
   const [moms, setMoms] = useState<any[]>([]);
@@ -204,10 +202,9 @@ export default function MeetingsPage() {
   const handleSelectDomainMembers = (domain: string, members: any[]) => {
     const current = [...formData.attendees];
     const domainMemberNames = members.map(m => m.name);
-    
-    // If all are already selected, deselect them. Otherwise, select all.
+
     const allSelected = domainMemberNames.every(name => current.includes(name));
-    
+
     if (allSelected) {
       setFormData({ ...formData, attendees: current.filter(n => !domainMemberNames.includes(n)) });
     } else {
@@ -290,8 +287,7 @@ export default function MeetingsPage() {
   };
   const handleScheduleMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate past date
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(meetingFormData.date);
@@ -337,7 +333,6 @@ export default function MeetingsPage() {
     }
   };
 
-  // Group members by domain
   const membersByDomain = allMembers.reduce((acc: any, member: any) => {
     const domain = member.domain?.name || "Unassigned";
     if (!acc[domain]) acc[domain] = [];
@@ -361,7 +356,7 @@ export default function MeetingsPage() {
     setMeetingFormData(prev => {
       const current = prev.participantIds;
       const allSelected = memberIds.every(id => current.includes(id));
-      
+
       if (allSelected) {
         return { ...prev, participantIds: current.filter(id => !memberIds.includes(id)) };
       } else {
@@ -375,7 +370,7 @@ export default function MeetingsPage() {
     try {
       toast.loading("Generating Secure PDF...", { id: 'pdf-download' });
       const response = await momService.downloadMoMPDF(mom._id);
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -384,7 +379,7 @@ export default function MeetingsPage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       toast.success("MOM Downloaded Successfully", { id: 'pdf-download' });
     } catch (err) {
       console.error("PDF Download failed", err);
@@ -417,7 +412,6 @@ export default function MeetingsPage() {
         </button>
       </div>
 
-      {/* Filter Bar */}
       <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-[2rem] p-4 flex flex-col md:flex-row items-center gap-4">
         <div className="flex-1 w-full relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
@@ -454,7 +448,6 @@ export default function MeetingsPage() {
         </button>
       </div>
 
-      {/* MoM List */}
       {loading ? (
         <div className="py-20 flex justify-center">
           <Loader2 className="w-8 h-8 text-primary animate-spin opacity-40" />
@@ -540,7 +533,7 @@ export default function MeetingsPage() {
           <p className="text-muted-foreground/40 font-medium">No meeting logs found in this sequence.</p>
         </div>
       )) : (
-        /* Meetings List */
+
         meetings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {meetings.map((meeting) => (
@@ -559,7 +552,7 @@ export default function MeetingsPage() {
                    </div>
 
                    <h3 className="text-lg font-bold text-white tracking-tight line-clamp-1">{meeting.title}</h3>
-                   
+
                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-muted-foreground/40 text-[10px] font-bold uppercase tracking-widest">
                          <div className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(meeting.date).toLocaleDateString()}</div>
@@ -650,7 +643,6 @@ export default function MeetingsPage() {
         )
       )}
 
-      {/* Schedule Meeting Modal */}
       {showMeetingModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2.5rem] w-full max-w-5xl h-full md:h-[90vh] flex flex-col relative shadow-2xl overflow-hidden">
@@ -666,7 +658,7 @@ export default function MeetingsPage() {
                       </div>
                   </div>
                   <div className="flex items-center gap-3 md:gap-6">
-                      {/* Progress Indicator */}
+
                       <div className="hidden md:flex items-center gap-2">
                          {meetingSteps.map((step) => (
                             <React.Fragment key={step.id}>
@@ -694,7 +686,7 @@ export default function MeetingsPage() {
             </div>
 
             <form onSubmit={handleScheduleMeeting} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-10 md:pt-8 space-y-8 md:space-y-10 pb-32">
-               {/* Step 1: Logistics */}
+
                {meetingStep === 1 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex items-center gap-2 mb-2">
@@ -741,7 +733,6 @@ export default function MeetingsPage() {
                </section>
                )}
 
-               {/* Step 2: Participants */}
                {meetingStep === 2 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
@@ -768,7 +759,7 @@ export default function MeetingsPage() {
                      {Object.entries(membersByDomain).map(([domain, members]: [string, any]) => {
                         const filteredMembers = members.filter((m: any) => m.name.toLowerCase().includes(memberSearch.toLowerCase()));
                         if (filteredMembers.length === 0) return null;
-                        
+
                         const memberIds = filteredMembers.map((m: any) => m._id);
                         const isAllSelected = memberIds.every((id: string) => meetingFormData.participantIds.includes(id));
                         const isExpanded = expandedDomains.includes(domain);
@@ -799,7 +790,7 @@ export default function MeetingsPage() {
                                        {isAllSelected ? 'Deselect Team' : 'Select Entire Team'}
                                     </button>
                                  </div>
-                                 
+
                                  {isExpanded && (
                                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                        {filteredMembers.map((member: any) => {
@@ -836,7 +827,6 @@ export default function MeetingsPage() {
                </section>
                )}
 
-               {/* Step 3: Agenda */}
                {meetingStep === 3 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                      <div className="flex items-center gap-2 mb-2">
@@ -861,7 +851,7 @@ export default function MeetingsPage() {
                 </div>
                 <div className="flex flex-row items-center gap-2 w-full md:w-auto">
                    <button type="button" onClick={() => { setShowMeetingModal(false); setEditingMeeting(null); setMeetingFormData({ title: "", agenda: "", date: "", time: "", domains: [], participantIds: [] }); }} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-all whitespace-nowrap active:scale-95">Discard</button>
-                   
+
                    {meetingStep > 1 && (
                       <button type="button" onClick={() => setMeetingStep(prev => prev - 1)} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white border border-white/5 hover:border-white/10 transition-all whitespace-nowrap active:scale-95">Back</button>
                    )}
@@ -883,7 +873,6 @@ export default function MeetingsPage() {
         </div>
       )}
 
-      {/* MoM Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-0 md:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border-x md:border border-white/10 rounded-none md:rounded-[2.5rem] w-full max-w-5xl h-full md:h-[90vh] flex flex-col relative shadow-2xl overflow-hidden">
@@ -899,7 +888,7 @@ export default function MeetingsPage() {
                      </div>
                   </div>
                   <div className="flex items-center gap-3 md:gap-6">
-                     {/* Progress Indicator */}
+
                      <div className="hidden md:flex items-center gap-2">
                         {steps.map((step) => (
                            <React.Fragment key={step.id}>
@@ -927,7 +916,7 @@ export default function MeetingsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-10 md:pt-8 space-y-6 md:space-y-12 pb-32">
-               {/* Step 1: Basic Info */}
+
                {currentStep === 1 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                      <div className="flex items-center gap-2 mb-2">
@@ -997,7 +986,6 @@ export default function MeetingsPage() {
                   </section>
                )}
 
-               {/* Step 2: Attendees */}
                {currentStep === 2 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
@@ -1024,7 +1012,7 @@ export default function MeetingsPage() {
                         {Object.entries(membersByDomain).map(([domain, members]: [string, any]) => {
                            const filteredMembers = members.filter((m: any) => m.name.toLowerCase().includes(memberSearch.toLowerCase()));
                            if (filteredMembers.length === 0) return null;
-                           
+
                            const domainMemberNames = filteredMembers.map((m: any) => m.name);
                            const isAllSelected = domainMemberNames.every((name: string) => formData.attendees.includes(name));
                            const isExpanded = expandedDomains.includes(domain);
@@ -1055,7 +1043,7 @@ export default function MeetingsPage() {
                                           {isAllSelected ? 'Deselect Domain' : 'Select All Domain'}
                                        </button>
                                     </div>
-                                    
+
                                     {isExpanded && (
                                        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                           {filteredMembers.map((member: any) => {
@@ -1092,7 +1080,6 @@ export default function MeetingsPage() {
                   </section>
                )}
 
-               {/* Step 3: Deliberations & Notes */}
                {currentStep === 3 && (
                   <section className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                      <div className="flex items-center gap-2 mb-2">
@@ -1127,7 +1114,7 @@ export default function MeetingsPage() {
                </div>
                 <div className="flex flex-row items-center gap-2 w-full md:w-auto">
                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white transition-all whitespace-nowrap active:scale-95">Discard</button>
-                   
+
                    {currentStep > 1 && (
                       <button type="button" onClick={() => setCurrentStep(prev => prev - 1)} className="flex-1 md:flex-none py-3 md:py-4 px-4 md:px-10 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-muted-foreground hover:text-white border border-white/5 hover:border-white/10 transition-all whitespace-nowrap active:scale-95">Back</button>
                    )}

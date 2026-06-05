@@ -37,7 +37,6 @@ interface LeaderboardChartsProps {
 export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
   const [selectedDomain, setSelectedDomain] = React.useState<string>('all');
 
-  // Bar Chart Data: Domain Performance
   const barData = {
     labels: data.domains.map(d => d.name),
     datasets: [
@@ -53,7 +52,6 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
     ],
   };
 
-  // Line Chart Data: Performance Curve
   const filteredMembers = (selectedDomain === 'all' 
     ? data.members 
     : data.members.filter(m => m.domain === selectedDomain))
@@ -123,7 +121,7 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      {/* Bar Chart: Domain Power Ranking */}
+
       <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -136,7 +134,6 @@ export default function LeaderboardCharts({ data }: LeaderboardChartsProps) {
         </div>
       </div>
 
-      {/* Line Chart: Performance Curve */}
       <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>

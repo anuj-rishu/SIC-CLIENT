@@ -8,7 +8,7 @@ export function RefreshButton() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    // Reload the page
+
     window.location.reload();
   };
 

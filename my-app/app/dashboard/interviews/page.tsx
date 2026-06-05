@@ -41,8 +41,7 @@ export default function InterviewsPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showEvaluateModal, setShowEvaluateModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
-  
-  // Schedule Form State
+
   const [scheduleData, setScheduleData] = useState({
     startDate: "",
     endDate: "",
@@ -53,7 +52,6 @@ export default function InterviewsPage() {
     domain: "web dev"
   });
 
-  // Evaluation Form State
   const [evaluationData, setEvaluationData] = useState({
     result: "SELECTED",
     rating: 5
@@ -402,9 +400,6 @@ export default function InterviewsPage() {
     }
   };
 
-
-
-
   const availableDates = useMemo(() => {
     const dates = bookings
       .map(b => b.slot?.date?.split('T')[0])
@@ -417,19 +412,19 @@ export default function InterviewsPage() {
       const matchesSearch = 
         b.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = 
         statusFilter === "All" || 
         b.status === statusFilter || 
         (statusFilter === "SELECTED" && b.evaluation?.result === "SELECTED") ||
         (statusFilter === "REJECTED" && b.evaluation?.result === "REJECTED");
-      
+
       const bDate = b.slot?.date?.split('T')[0];
       const matchesDate = dateFilter === "All" || bDate === dateFilter;
-      
+
       const bDomain = b.slot?.scheduleId?.domain;
       const matchesDomain = domainFilter === "All" || bDomain === domainFilter;
-      
+
       return matchesSearch && matchesStatus && matchesDate && matchesDomain;
     });
 
@@ -459,7 +454,7 @@ export default function InterviewsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-4">
-      {/* Tab Switcher & Top Actions */}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex bg-white/5 p-1 rounded-2xl w-full md:w-auto">
           {["Interviews", "Schedules", "Whitelist"].map((tab) => (
@@ -526,7 +521,7 @@ export default function InterviewsPage() {
 
       {activeTab === "Interviews" ? (
         <>
-          {/* Stats Cards */}
+
           <div className="bg-card/40 backdrop-blur-md border border-white/5 rounded-2xl md:rounded-[2.5rem] overflow-hidden shadow-2xl">
             <div className="grid grid-cols-3">
               <div className="p-4 md:p-7 border-r border-white/5 flex items-center gap-4">
@@ -559,10 +554,8 @@ export default function InterviewsPage() {
             </div>
           </div>
 
-          {/* Filter Bar */}
           <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-6 lg:p-8 flex flex-col xl:flex-row items-stretch xl:items-center gap-4 md:gap-6">
-            
-            {/* Left/Main Section: Search & Status */}
+
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-1">
               <div className="md:col-span-8 relative group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30 group-focus-within:text-primary transition-colors" />
@@ -593,7 +586,6 @@ export default function InterviewsPage() {
               </div>
             </div>
 
-            {/* Right Section: Refiners & Actions */}
             <div className="flex flex-col sm:flex-row items-center gap-3">
               <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                 <div className="relative group">
@@ -648,7 +640,6 @@ export default function InterviewsPage() {
             </div>
           )}
 
-          {/* Bookings List */}
           <div className="grid grid-cols-1 gap-4">
             {filteredBookings.length > 0 ? (
               filteredBookings.map((booking) => (
@@ -659,8 +650,7 @@ export default function InterviewsPage() {
                   }`}
                 >
                   <div className="grid grid-cols-1 xl:grid-cols-12 items-start gap-4 xl:gap-0">
-                    
-                    {/* Zone 1: Identity (Col 5) */}
+
                     <div className="xl:col-span-5 flex items-start gap-3 md:gap-4 xl:pr-6 pb-4 xl:pb-0">
                       <div className="relative shrink-0 mt-2">
                         <input 
@@ -692,7 +682,6 @@ export default function InterviewsPage() {
                       </div>
                     </div>
 
-                    {/* Zone 2: Logistics (Col 3) */}
                     <div className="xl:col-span-3 flex items-center border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:px-6">
                       <div className="space-y-1.5 w-full">
                         <p className="text-[7px] md:text-[8px] font-black text-muted-foreground/30 uppercase tracking-[0.2em]">Interview Logistics</p>
@@ -710,7 +699,6 @@ export default function InterviewsPage() {
                       </div>
                     </div>
 
-                    {/* Zone 3: Result & Admin (Col 2) */}
                     <div className="xl:col-span-2 flex items-center border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:px-6">
                        {booking.status === "COMPLETED" && booking.evaluation ? (
                          <div className="flex flex-col gap-1">
@@ -740,7 +728,6 @@ export default function InterviewsPage() {
                        )}
                     </div>
 
-                    {/* Zone 4: Actions (Col 2) */}
                     <div className="xl:col-span-2 flex items-center justify-end border-t xl:border-t-0 xl:border-l border-white/5 pt-4 xl:pt-0 xl:pl-6 gap-2">
                       {booking.meetingLink && (
                         <a 
@@ -753,7 +740,7 @@ export default function InterviewsPage() {
                           <ExternalLink className="w-3.5 h-3.5 group-hover/link:scale-110 transition-transform" />
                         </a>
                       )}
-                      
+
                       {(booking.status === "BOOKED" || booking.status === "COMPLETED") && (
                         <button 
                           onClick={() => handleOpenEvaluateModal(booking)}
@@ -860,14 +847,14 @@ export default function InterviewsPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Whitelist Content */}
+
           <div className="bg-card/30 backdrop-blur-md border border-white/5 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 md:mb-12">
               <div>
                 <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-tighter">Access Whitelist</h3>
                 <p className="text-[10px] md:text-sm text-muted-foreground/40 uppercase font-black tracking-widest mt-1.5">Authorized Student Directory</p>
               </div>
-              
+
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 lg:max-w-4xl lg:justify-end">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/20 group-focus-within:text-primary transition-colors" />
@@ -929,7 +916,7 @@ export default function InterviewsPage() {
                    {selectedAllowedStudents.length > 0 ? `${selectedAllowedStudents.length} Selected` : "Select All Visible"}
                 </span>
               </div>
-              
+
               <div className="px-5 py-3 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-3">
                 <span className="text-sm font-black text-white">{filteredWhitelist.length}</span>
                 <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">Matched</span>
@@ -976,7 +963,7 @@ export default function InterviewsPage() {
               )}
             </div>
           </div>
-          
+
           <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 flex items-start gap-4">
             <div className="p-3 bg-emerald-500/10 rounded-xl">
               <Upload className="w-6 h-6 text-emerald-500" />
@@ -991,7 +978,6 @@ export default function InterviewsPage() {
         </div>
       )}
 
-      {/* Create Schedule Modal */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 w-full max-w-2xl relative shadow-2xl">
@@ -1100,7 +1086,6 @@ export default function InterviewsPage() {
         </div>
       )}
 
-      {/* Evaluate Modal */}
       {showEvaluateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-card/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 w-full max-w-md relative shadow-2xl">
@@ -1174,4 +1159,3 @@ export default function InterviewsPage() {
     </div>
   );
 }
-
