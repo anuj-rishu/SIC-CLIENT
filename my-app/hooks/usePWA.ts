@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { toast } from "react-hot-toast"
 
 export function usePWA() {
   const [platform, setPlatform] = useState<"ios" | "android" | "other" | null>(null);
